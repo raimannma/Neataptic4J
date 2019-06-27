@@ -1,6 +1,3 @@
-import enums.Activation;
-import enums.NodeType;
-
 import java.util.ArrayList;
 
 public class GRU extends Layer {

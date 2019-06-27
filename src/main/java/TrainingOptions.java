@@ -1,13 +1,10 @@
-import enums.Cost;
-import enums.Rate;
-
 public class TrainingOptions {
     public Integer iterations;
     public Character error;
     public boolean crossValidate;
     public int crossValidateTestSize;
     public double crossValidateTestError;
-    public boolean clear;
+    public Boolean clear;
     public boolean shuffle;
     public boolean schedule;
     public int scheduleIterations;
@@ -15,6 +12,7 @@ public class TrainingOptions {
     public double scheduleError;
     public Network network;
     public double scheduleFitness;
+    private Boolean withNetwork;
     private Cost cost;
     private Double targetError;
     private Double rate;
@@ -24,6 +22,16 @@ public class TrainingOptions {
     private Integer batchSize;
     private Double growth;
     private Integer amount;
+    private Boolean equal;
+    private Integer popSize;
+    private Integer elitism;
+    private Double provinance;
+    private Double mutationRate;
+    private Integer mutationAmount;
+    private Boolean fitnessPopulation;
+    private Selection selection;
+    private Crossover[] crossover;
+    private Mutation[] mutation;
 
     public double getTargetError(final double defaultValue) {
         return this.targetError != null ? this.targetError : defaultValue;
@@ -91,5 +99,53 @@ public class TrainingOptions {
 
     public int getAmount(final int defaultValue) {
         return this.amount != null ? this.amount : defaultValue;
+    }
+
+    public boolean getEqual(final boolean defaultValue) {
+        return this.equal == null ? defaultValue : this.equal;
+    }
+
+    public boolean getClear(final boolean defaultValue) {
+        return this.clear == null ? defaultValue : this.clear;
+    }
+
+    public int getPopSize(final int defaultValue) {
+        return this.popSize == null ? defaultValue : this.popSize;
+    }
+
+    public int getElitism(final int defaultValue) {
+        return this.elitism == null ? defaultValue : this.elitism;
+    }
+
+    public double getProvinance(final double defaultValue) {
+        return this.provinance == null ? defaultValue : this.provinance;
+    }
+
+    public double getMutationRate(final double defaultValue) {
+        return this.mutationRate == null ? defaultValue : this.mutationRate;
+    }
+
+    public int getMutationAmount(final int defaultValue) {
+        return this.mutationAmount == null ? defaultValue : this.mutationAmount;
+    }
+
+    public boolean getFitnessPopulation(final boolean defaultValue) {
+        return this.fitnessPopulation == null ? defaultValue : this.fitnessPopulation;
+    }
+
+    public Selection getSelection(final Selection defaultValue) {
+        return this.selection == null ? defaultValue : this.selection;
+    }
+
+    public Crossover[] getCrossover(final Crossover[] defaultValue) {
+        return this.crossover == null ? defaultValue : this.crossover;
+    }
+
+    public Mutation[] getMutation(final Mutation[] defaultValue) {
+        return this.mutation == null ? defaultValue : this.mutation;
+    }
+
+    public Network getNetwork(final Network defaultValue) {
+        return this.network == null ? defaultValue : this.network;
     }
 }

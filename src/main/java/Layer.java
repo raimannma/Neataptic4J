@@ -1,6 +1,3 @@
-import enums.Activation;
-import enums.NodeType;
-
 import java.util.ArrayList;
 
 public abstract class Layer extends NodeGroup {

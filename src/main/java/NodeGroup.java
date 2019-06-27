@@ -1,6 +1,3 @@
-import enums.Activation;
-import enums.NodeType;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;

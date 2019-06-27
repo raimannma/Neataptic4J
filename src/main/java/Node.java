@@ -1,11 +1,5 @@
-import enums.Activation;
-import enums.Mutation;
-import enums.NodeType;
-
 import java.util.ArrayList;
 import java.util.List;
-
-import static enums.Mutation.NULL;
 
 public class Node {
     public int index;
@@ -66,7 +60,7 @@ public class Node {
             this.state += connection.from.activation * connection.weight * connection.gain;
         }
 
-        this.activation = this.squash.run(this.state) * this.mask;
+        this.activation = this.squash.run(this.state, false) * this.mask;
         this.derivative = this.squash.run(this.state, true);
 
         final List<Node> nodes = new ArrayList<>();
@@ -122,7 +116,7 @@ public class Node {
             this.state += connection.from.activation * connection.weight * connection.gain;
         }
 
-        this.activation = this.squash.run(this.state);
+        this.activation = this.squash.run(this.state, false);
 
         for (int i = 0; i < this.connections.gated.size(); i++) {
             this.connections.gated.get(i).gain = this.activation;
@@ -311,16 +305,16 @@ public class Node {
     }
 
     public void mutate(final Mutation method) {
-        if (method == NULL) {
+        if (method == Mutation.NULL) {
             throw new RuntimeException("No mutation method given!");
         }
         switch (method) {
             case MOD_ACTIVATION:
-                this.squash = method.allowed.get((int) (method.allowed.indexOf(this.squash) +
-                        Math.floor(Math.random() * (method.allowed.size() - 1)) + 1) % method.allowed.size());
+                this.squash = method.allowed().get((int) (method.allowed().indexOf(this.squash) +
+                        Math.floor(Math.random() * (method.allowed().size() - 1)) + 1) % method.allowed().size());
                 break;
             case MOD_BIAS:
-                this.bias += Math.random() * (method.max - method.min) + method.min;
+                this.bias += Math.random() * (method.max() - method.min()) + method.min();
                 break;
             default:
                 break;

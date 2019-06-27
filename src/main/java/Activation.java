@@ -1,5 +1,3 @@
-package enums;
-
 public enum Activation {
     LOGISTIC {
         @Override
@@ -39,7 +37,7 @@ public enum Activation {
             }
             return x > 0 ? x : 0;
         }
-    }, SOFTSIG {
+    }, SOFTSIGN {
         @Override
         public double run(final double x, final Boolean derivate) {
             final double d = 1 + Math.abs(x);

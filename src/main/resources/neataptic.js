@@ -1045,7 +1045,7 @@
                             break;
                         case mutation.MOD_ACTIVATION:
                             // Has no effect on input node, so they are excluded
-                            if (!method.mutateOutput &&
+                            if (!method.mutateOutput() &&
                                 this.input + this.output === this.nodes.length) {
                                 if (config.warnings) console.warn('No nodes that allow mutation of activation function');
                                 break;
@@ -2722,9 +2722,7 @@
                     this.population = newPopulation;
                     this.mutate();
 
-                    this.population.push(...elitists
-                )
-                    ;
+                    this.population.push(elitists);
 
                     // Reset the scores
                     for (i = 0; i < this.population.length; i++) {
@@ -2861,10 +2859,6 @@
                             var index = Math.floor(Math.pow(Math.random(), this.selection.power) * this.population.length);
                             return this.population[index];
                         case selection.FITNESS_PROPORTIONATE:
-                            // As negative fitnesses are possible
-                            // https://stackoverflow.com/questions/16186686/genetic-algorithm-handling-negative-fitness-values
-                            // this is unnecessarily run for every individual, should be changed
-
                             var totalFitness = 0;
                             var minimalFitness = 0;
                             for (i = 0; i < this.population.length; i++) {

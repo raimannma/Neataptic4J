@@ -1,15 +1,14 @@
-import enums.*;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class Network {
     final int input;
     final int output;
-    private final double score = 0;
+    double score = 0;
     ArrayList<Node> nodes;
     ArrayList<Connection> connections;
     ArrayList<Connection> gates;
@@ -134,8 +133,8 @@ public class Network {
                 .forEach(conn -> n1Connections.set(Connection.getInnovationID(conn.from.index, conn.to.index), conn));
 
         final ArrayList<Connection> connections = new ArrayList<>();
-        final ArrayList<Integer> keys1 = Utils.getKeys(n1Connections);
-        final ArrayList<Integer> keys2 = Utils.getKeys(n2Connections);
+        final ArrayList<Integer> keys1 = Network.getKeys(n1Connections);
+        final ArrayList<Integer> keys2 = Network.getKeys(n2Connections);
         for (int i = keys1.size() - 1; i >= 0; i--) {
             if (n2Connections.get(keys1.get(i)) != null) {
                 final Connection conn = Math.random() >= 0.5 ? n1Connections.get(keys1.get(i)) : n2Connections.get(keys1.get(i));
@@ -165,6 +164,13 @@ public class Network {
             }
         }
         return offspring;
+    }
+
+    public static ArrayList<Integer> getKeys(final ArrayList<Connection> list) {
+        return IntStream.range(0, list.size())
+                .filter(i -> list.get(i) != null)
+                .boxed()
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     public ArrayList<Double> activate(final ArrayList<Double> input, final boolean training) {
@@ -287,7 +293,7 @@ public class Network {
 
         for (int i = node.connections.in.size() - 1; i >= 0; i--) {
             final Connection connection = node.connections.in.get(i);
-            if (Mutation.SUB_NODE.keepGates && connection.gater != null && !connection.gater.equals(node)) {
+            if (Mutation.SUB_NODE.keepGates() && connection.gater != null && !connection.gater.equals(node)) {
                 gaters.add(connection.gater);
             }
             inputs.add(connection.from);
@@ -297,7 +303,7 @@ public class Network {
         final ArrayList<Node> outputs = new ArrayList<>();
         for (int i = node.connections.out.size() - 1; i >= 0; i--) {
             final Connection connection = node.connections.out.get(i);
-            if (Mutation.SUB_NODE.keepGates && connection.gater != null && !connection.gater.equals(node)) {
+            if (Mutation.SUB_NODE.keepGates() && connection.gater != null && !connection.gater.equals(node)) {
                 gaters.add(connection.gater);
             }
             outputs.add(connection.to);
@@ -394,7 +400,7 @@ public class Network {
                 allConnections.addAll(this.selfConnections);
 
                 final Connection conn = allConnections.get((int) Math.floor(Math.random() * allConnections.size()));
-                final double modification = Math.random() * (method.max - method.min) + method.min;
+                final double modification = Math.random() * (method.max() - method.min()) + method.min();
                 conn.weight += modification;
                 break;
             case MOD_BIAS:
@@ -402,10 +408,10 @@ public class Network {
                 this.nodes.get(index1).mutate(method);
                 break;
             case MOD_ACTIVATION:
-                if (!method.mutateOutput && this.input + this.output == this.nodes.size()) {
+                if (!method.mutateOutput() && this.input + this.output == this.nodes.size()) {
                     throw new RuntimeException("No nodes that allow mutation of activation function!");
                 }
-                final int index2 = (int) Math.floor(Math.random() * (this.nodes.size() - (method.mutateOutput ? 0 : this.output) - this.input) + this.input);
+                final int index2 = (int) Math.floor(Math.random() * (this.nodes.size() - (method.mutateOutput() ? 0 : this.output) - this.input) + this.input);
                 this.nodes.get(index2).mutate(method);
                 break;
             case ADD_SELF_CONN:
@@ -494,14 +500,14 @@ public class Network {
                 this.disconnect(randomConn1.from, randomConn1.to);
                 break;
             case SWAP_NODES:
-                if (method.mutateOutput && this.nodes.size() - this.input < 2 ||
-                        (!method.mutateOutput && this.nodes.size() - this.input - this.output < 2)) {
+                if (method.mutateOutput() && this.nodes.size() - this.input < 2 ||
+                        (!method.mutateOutput() && this.nodes.size() - this.input - this.output < 2)) {
                     throw new RuntimeException("No nodes that allow swapping of bias and activation function");
                 }
 
-                int index5 = (int) Math.floor(Math.random() * (this.nodes.size() - (method.mutateOutput ? 0 : this.output) - this.input) + this.input);
+                int index5 = (int) Math.floor(Math.random() * (this.nodes.size() - (method.mutateOutput() ? 0 : this.output) - this.input) + this.input);
                 final Node node1 = this.nodes.get(index5);
-                index5 = (int) Math.floor(Math.random() * (this.nodes.size() - (method.mutateOutput ? 0 : this.output) - this.input) + this.input);
+                index5 = (int) Math.floor(Math.random() * (this.nodes.size() - (method.mutateOutput() ? 0 : this.output) - this.input) + this.input);
                 final Node node2 = this.nodes.get(index5);
 
                 final double biasTemp = node1.bias;

@@ -1,11 +1,12 @@
 import java.util.ArrayList;
+import java.util.List;
 
 public class ConnectionHistory {
-    ArrayList<Connection> in;
+    final List<Connection> in;
+    final List<Connection> selfArr;
+    final List<Connection> gated;
+    final List<Connection> out;
     Connection self;
-    ArrayList<Connection> selfArr;
-    ArrayList<Connection> gated;
-    ArrayList<Connection> out;
     Node node;
 
     public ConnectionHistory(final Node node) {

@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Node {
+    final ConnectionHistory connections;
     public int index;
-    ConnectionHistory connections;
     NodeType type;
     double mask;
     Activation squash;

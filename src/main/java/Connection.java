@@ -4,10 +4,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 
 public class Connection {
+    public final Node to;
     public double gain;
     public double weight;
     public Node from;
-    public Node to;
     @Nullable
     public Node gater;
     public double elegibility;

@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.stream.IntStream;
 
 public class NEAT {
@@ -61,6 +62,107 @@ public class NEAT {
         this.createPool(null);
     }
 
+    public static Network crossOver(final Network network1, final Network network2, final boolean equal) {
+        if (network1.input != network2.input || network1.output != network2.output) {
+            throw new RuntimeException("Networks don't have the same input/output size!");
+        }
+        final Network offspring = new Network(network1.input, network1.output);
+        offspring.connections = new ArrayList<>();
+        offspring.nodes = new ArrayList<>();
+
+        final double score1 = network1.score;
+        final double score2 = network2.score;
+        final int size;
+        if (equal || score1 == score2) {
+            final int max = Math.max(network1.nodes.size(), network2.nodes.size());
+            final int min = Math.min(network1.nodes.size(), network2.nodes.size());
+            size = (int) Math.floor(Math.random() * (max - min + 1) + 1);
+        } else if (score1 > score2) {
+            size = network1.nodes.size();
+        } else {
+            size = network2.nodes.size();
+        }
+
+        final int outputSize = network1.output;
+
+        for (int i = 0; i < network1.nodes.size(); i++) {
+            network1.nodes.get(i).index = i;
+        }
+        for (int i = 0; i < network2.nodes.size(); i++) {
+            network2.nodes.get(i).index = i;
+        }
+
+        for (int i = 0; i < size; i++) {
+            Node node;
+            if (i < size - outputSize) {
+                final double random = Math.random();
+                node = random >= 0.5 ? network1.nodes.get(i) : network2.nodes.get(i);
+                final Node other = random < 0.5 ? network1.nodes.get(i) : network2.nodes.get(i);
+                if (node == null || node.type == NodeType.OUTPUT) {
+                    node = other;
+                }
+            } else {
+                if (Math.random() >= 0.5) {
+                    node = network1.nodes.get(network1.nodes.size() + i - size);
+                } else {
+                    node = network2.nodes.get(network2.nodes.size() + i - size);
+                }
+            }
+
+            final Node newNode = new Node(node.type);
+            newNode.bias = node.bias;
+            newNode.squash = node.squash;
+            newNode.type = node.type;
+
+            offspring.nodes.add(newNode);
+        }
+        final List<Connection> n1Connections = new ArrayList<>();
+        final List<Connection> n2Connections = new ArrayList<>();
+
+        network1.connections
+                .forEach(conn -> n1Connections.set(Connection.getInnovationID(conn.from.index, conn.to.index), conn));
+        network1.selfConnections
+                .forEach(conn -> n1Connections.set(Connection.getInnovationID(conn.from.index, conn.to.index), conn));
+        network2.connections
+                .forEach(conn -> n1Connections.set(Connection.getInnovationID(conn.from.index, conn.to.index), conn));
+        network2.selfConnections
+                .forEach(conn -> n1Connections.set(Connection.getInnovationID(conn.from.index, conn.to.index), conn));
+
+        final List<Connection> connections = new ArrayList<>();
+        final List<Integer> keys1 = Network.getKeys(n1Connections);
+        final List<Integer> keys2 = Network.getKeys(n2Connections);
+        for (int i = keys1.size() - 1; i >= 0; i--) {
+            if (n2Connections.get(keys1.get(i)) != null) {
+                final Connection conn = Math.random() >= 0.5 ? n1Connections.get(keys1.get(i)) : n2Connections.get(keys1.get(i));
+                connections.add(conn);
+                n2Connections.set(keys1.get(1), null);
+            } else if (score1 >= score2 || equal) {
+                connections.add(n1Connections.get(keys1.get(1)));
+            }
+        }
+
+        if (score2 >= score1 || equal) {
+            keys2.stream()
+                    .filter(index -> n2Connections.get(index) != null)
+                    .map(n2Connections::get)
+                    .forEach(connections::add);
+        }
+        for (final Connection connData : connections) {
+            if (connData.to.index < size && connData.from.index < size) {
+                final Node from = offspring.nodes.get(connData.from.index);
+                final Node to = offspring.nodes.get(connData.to.index);
+                final Connection conn = offspring.connect(from, to).get(0);
+
+                conn.weight = connData.weight;
+                assert connData.gater != null;
+                if (connData.gater.index != -1 && connData.gater.index < size) {
+                    offspring.gate(offspring.nodes.get(connData.gater.index), conn);
+                }
+            }
+        }
+        return offspring;
+    }
+
     private void createPool(final Network network) {
         this.population = new ArrayList<>();
         for (int i = 0; i < this.popSize; i++) {
@@ -107,7 +209,7 @@ public class NEAT {
 
         final ArrayList<Network> newPopulation = new ArrayList<>();
 
-        final ArrayList<Network> elitists = new ArrayList<>();
+        final List<Network> elitists = new ArrayList<>();
         for (int i = 0; i < this.elitism; i++) {
             elitists.add(this.population.get(i));
         }
@@ -122,8 +224,8 @@ public class NEAT {
         this.population = newPopulation;
         this.mutate();
         this.population.addAll(elitists);
-        for (int i = 0; i < this.population.size(); i++) {
-            this.population.get(i).score = -1;
+        for (final Network network : this.population) {
+            network.score = -1;
         }
         this.generation++;
         return fittest;
@@ -152,7 +254,7 @@ public class NEAT {
     }
 
     private Network getOffspring() {
-        return Network.crossOver(this.getParent(), this.getParent(), this.equal);
+        return NEAT.crossOver(this.getParent(), this.getParent(), this.equal);
     }
 
     private Network getParent() {
@@ -227,10 +329,10 @@ public class NEAT {
     }
 
     public void mutate() {
-        for (int i = 0; i < this.population.size(); i++) {
+        for (final Network network : this.population) {
             if (Math.random() <= this.mutationRate) {
                 for (int j = 0; j < this.mutationAmount; j++) {
-                    this.population.get(i).mutate(this.selectMutationMethod(this.population.get(i)));
+                    network.mutate(this.selectMutationMethod(network));
                 }
             }
         }

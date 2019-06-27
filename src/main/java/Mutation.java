@@ -60,6 +60,16 @@ public enum Mutation {
         }
     };
 
+    public static final Mutation[] FFW = new Mutation[]{
+            Mutation.ADD_NODE,
+            Mutation.SUB_NODE,
+            Mutation.ADD_CONN,
+            Mutation.SUB_CONN,
+            Mutation.MOD_WEIGHT,
+            Mutation.MOD_BIAS,
+            Mutation.MOD_ACTIVATION,
+            Mutation.SWAP_NODES
+    };
     public static Mutation[] ALL = new Mutation[]{
             Mutation.ADD_NODE,
             Mutation.SUB_NODE,
@@ -74,16 +84,6 @@ public enum Mutation {
             Mutation.SUB_SELF_CONN,
             Mutation.ADD_BACK_CONN,
             Mutation.SUB_BACK_CONN,
-            Mutation.SWAP_NODES
-    };
-    public static Mutation[] FFW = new Mutation[]{
-            Mutation.ADD_NODE,
-            Mutation.SUB_NODE,
-            Mutation.ADD_CONN,
-            Mutation.SUB_CONN,
-            Mutation.MOD_WEIGHT,
-            Mutation.MOD_BIAS,
-            Mutation.MOD_ACTIVATION,
             Mutation.SWAP_NODES
     };
 

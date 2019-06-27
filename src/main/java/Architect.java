@@ -299,7 +299,7 @@ public class Architect {
     }
 
     public Network NARX(final int inputSize, final int[] hiddenLayers, final int outputSize, final int previousInput, final int previousOutput) {
-        final ArrayList<NodeGroup> nodes = new ArrayList<>();
+        final List<NodeGroup> nodes = new ArrayList<>();
 
         final Dense input = new Dense(inputSize);
         final Memory inputMemory = new Memory(inputSize, previousInput);

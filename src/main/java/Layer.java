@@ -1,5 +1,7 @@
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
 
 public abstract class Layer extends NodeGroup {
     private final ConnectionHistory connections;
@@ -42,28 +44,27 @@ public abstract class Layer extends NodeGroup {
     }
 
     @Override
-    public ArrayList<Connection> connect(final NodeGroup target, final Connection.Method method, final Double weight) {
+    public List<Connection> connect(final NodeGroup target, final Connection.Method method, final Double weight) {
         return this.output.connect(target, method, weight);
     }
 
     @Override
-    public ArrayList<Connection> connect(final Node target, final Connection.Method method, final Double weight) {
+    public List<Connection> connect(final Node target, final Connection.Method method, final Double weight) {
         return this.output.connect(target, method, weight);
     }
 
     @Override
-    public ArrayList<Connection> connect(final Layer target, final Connection.Method method, final Double weight) {
-        return target.input(this, method, weight);
+    public void connect(final Layer target, final Connection.Method method, final Double weight) {
+        target.input(this, method, weight);
     }
 
-    public void gate(final ArrayList<Connection> connections, final Connection.Gating method) {
+    @Override
+    public void gate(final List<Connection> connections, final Connection.Gating method) {
         this.output.gate(connections, method);
     }
 
     public void set(final Activation squash, final Double bias, final NodeType type) {
-        this.nodes.stream().filter(node -> node != null).forEach(node -> {
-            node.set(bias, squash, type);
-        });
+        this.nodes.stream().filter(Objects::nonNull).forEach(node -> node.set(bias, squash, type));
     }
 
     public void disconnect(final Layer target, Boolean twosided) {
@@ -99,7 +100,7 @@ public abstract class Layer extends NodeGroup {
         this.nodes.forEach(NodeGroup::clear);
     }
 
-    public abstract ArrayList<Connection> input(final NodeGroup from, final Connection.Method method, final Double weight);
+    public abstract List<Connection> input(final NodeGroup from, final Connection.Method method, final Double weight);
 
-    public abstract ArrayList<Connection> input(final Layer from, final Connection.Method method, final Double weight);
+    public abstract List<Connection> input(final Layer from, final Connection.Method method, final Double weight);
 }

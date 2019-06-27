@@ -3,8 +3,8 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 public class NodeGroup {
+    public final ConnectionHistory connections;
     public ArrayList<Node> nodes;
-    public ConnectionHistory connections;
 
     public NodeGroup(final int size) {
         this.nodes = new ArrayList<>();
@@ -13,8 +13,8 @@ public class NodeGroup {
         IntStream.range(0, size).forEach(i -> this.nodes.add(new Node()));
     }
 
-    public ArrayList<Double> activate(final double[] value) {
-        final ArrayList<Double> values = new ArrayList<>();
+    public List<Double> activate(final double[] value) {
+        final List<Double> values = new ArrayList<>();
         if (value != null && value.length != this.nodes.size()) {
             throw new RuntimeException("Array with values should be same as the amount of nodes!");
         }
@@ -43,12 +43,12 @@ public class NodeGroup {
         }
     }
 
-    public ArrayList<Connection> connect(final Layer target, final Connection.Method method, final Double weight) {
-        return target.input(this, method, weight);
+    public void connect(final Layer target, final Connection.Method method, final Double weight) {
+        target.input(this, method, weight);
     }
 
-    public ArrayList<Connection> connect(final Node target, final Connection.Method method, final Double weight) {
-        final ArrayList<Connection> connections = new ArrayList<>();
+    public List<Connection> connect(final Node target, final Connection.Method method, final Double weight) {
+        final List<Connection> connections = new ArrayList<>();
         for (final Node node : this.nodes) {
             final List<Connection> connection = node.connect(target, weight);
             this.connections.out.add(connection.get(0));
@@ -58,8 +58,8 @@ public class NodeGroup {
     }
 
 
-    public ArrayList<Connection> connect(final NodeGroup target, Connection.Method method, final Double weight) {
-        final ArrayList<Connection> connections = new ArrayList<>();
+    public List<Connection> connect(final NodeGroup target, Connection.Method method, final Double weight) {
+        final List<Connection> connections = new ArrayList<>();
         if (method == null) {
             if (!this.equals(target)) {
                 System.out.println("No group connection specified, using ALL_TO_ALL");
@@ -150,13 +150,13 @@ public class NodeGroup {
     }
 
     public void set(final Double bias, final Activation squash, final NodeType type) {
-        for (int i = 0; i < this.nodes.size(); i++) {
+        for (final Node node : this.nodes) {
             if (bias != null) {
-                this.nodes.get(i).bias = bias;
+                node.bias = bias;
             }
 
-            this.nodes.get(i).squash = squash == null ? this.nodes.get(i).squash : squash;
-            this.nodes.get(i).type = type == null ? this.nodes.get(i).type : type;
+            node.squash = squash == null ? node.squash : squash;
+            node.type = type == null ? node.type : type;
         }
     }
 
@@ -167,12 +167,12 @@ public class NodeGroup {
     }
 
     public void disconnect(final Node target, final Boolean twosided) {
-        for (int i = 0; i < this.nodes.size(); i++) {
-            this.nodes.get(i).disconnect(target, twosided);
+        for (final Node node : this.nodes) {
+            node.disconnect(target, twosided);
             for (int j = this.connections.out.size() - 1; j >= 0; j--) {
                 final Connection conn = this.connections.out.get(j);
 
-                if (conn.from.equals(this.nodes.get(i)) && conn.to.equals(target)) {
+                if (conn.from.equals(node) && conn.to.equals(target)) {
                     this.connections.out.remove(j);
                     break;
                 }

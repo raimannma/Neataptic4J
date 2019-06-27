@@ -82,7 +82,7 @@ public enum Activation {
         public double run(final double x, final Boolean derivate) {
             final double d = 2 / (1 + Math.exp(-x)) - 1;
             if (derivate) {
-                return 1 / 2 * (1 + d) * (1 - d);
+                return 0.5 * (1 + d) * (1 - d);
             }
             return d;
         }

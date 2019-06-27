@@ -69,115 +69,15 @@ public class Network {
         return network1;
     }
 
-    public static Network crossOver(final Network network1, final Network network2, final boolean equal) {
-        if (network1.input != network2.input || network1.output != network2.output) {
-            throw new RuntimeException("Networks don't have the same input/output size!");
-        }
-        final Network offspring = new Network(network1.input, network1.output);
-        offspring.connections = new ArrayList<>();
-        offspring.nodes = new ArrayList<>();
-
-        final double score1 = network1.score;
-        final double score2 = network2.score;
-        final int size;
-        if (equal || score1 == score2) {
-            final int max = Math.max(network1.nodes.size(), network2.nodes.size());
-            final int min = Math.min(network1.nodes.size(), network2.nodes.size());
-            size = (int) Math.floor(Math.random() * (max - min + 1) + 1);
-        } else if (score1 > score2) {
-            size = network1.nodes.size();
-        } else {
-            size = network2.nodes.size();
-        }
-
-        final int outputSize = network1.output;
-
-        for (int i = 0; i < network1.nodes.size(); i++) {
-            network1.nodes.get(i).index = i;
-        }
-        for (int i = 0; i < network2.nodes.size(); i++) {
-            network2.nodes.get(i).index = i;
-        }
-
-        for (int i = 0; i < size; i++) {
-            Node node;
-            if (i < size - outputSize) {
-                final double random = Math.random();
-                node = random >= 0.5 ? network1.nodes.get(i) : network2.nodes.get(i);
-                final Node other = random < 0.5 ? network1.nodes.get(i) : network2.nodes.get(i);
-                if (node == null || node.type == NodeType.OUTPUT) {
-                    node = other;
-                }
-            } else {
-                if (Math.random() >= 0.5) {
-                    node = network1.nodes.get(network1.nodes.size() + i - size);
-                } else {
-                    node = network2.nodes.get(network2.nodes.size() + i - size);
-                }
-            }
-
-            final Node newNode = new Node(node.type);
-            newNode.bias = node.bias;
-            newNode.squash = node.squash;
-            newNode.type = node.type;
-
-            offspring.nodes.add(newNode);
-        }
-        final ArrayList<Connection> n1Connections = new ArrayList<>();
-        final ArrayList<Connection> n2Connections = new ArrayList<>();
-
-        network1.connections
-                .forEach(conn -> n1Connections.set(Connection.getInnovationID(conn.from.index, conn.to.index), conn));
-        network1.selfConnections
-                .forEach(conn -> n1Connections.set(Connection.getInnovationID(conn.from.index, conn.to.index), conn));
-        network2.connections
-                .forEach(conn -> n1Connections.set(Connection.getInnovationID(conn.from.index, conn.to.index), conn));
-        network2.selfConnections
-                .forEach(conn -> n1Connections.set(Connection.getInnovationID(conn.from.index, conn.to.index), conn));
-
-        final ArrayList<Connection> connections = new ArrayList<>();
-        final ArrayList<Integer> keys1 = Network.getKeys(n1Connections);
-        final ArrayList<Integer> keys2 = Network.getKeys(n2Connections);
-        for (int i = keys1.size() - 1; i >= 0; i--) {
-            if (n2Connections.get(keys1.get(i)) != null) {
-                final Connection conn = Math.random() >= 0.5 ? n1Connections.get(keys1.get(i)) : n2Connections.get(keys1.get(i));
-                connections.add(conn);
-                n2Connections.set(keys1.get(1), null);
-            } else if (score1 >= score2 || equal) {
-                connections.add(n1Connections.get(keys1.get(1)));
-            }
-        }
-
-        if (score2 >= score1 || equal) {
-            keys2.stream()
-                    .filter(index -> n2Connections.get(index) != null)
-                    .map(n2Connections::get)
-                    .forEach(connections::add);
-        }
-        for (final Connection connData : connections) {
-            if (connData.to.index < size && connData.from.index < size) {
-                final Node from = offspring.nodes.get(connData.from.index);
-                final Node to = offspring.nodes.get(connData.to.index);
-                final Connection conn = offspring.connect(from, to).get(0);
-
-                conn.weight = connData.weight;
-                if (connData.gater.index != -1 && connData.gater.index < size) {
-                    offspring.gate(offspring.nodes.get(connData.gater.index), conn);
-                }
-            }
-        }
-        return offspring;
-    }
-
-    public static ArrayList<Integer> getKeys(final ArrayList<Connection> list) {
+    public static List<Integer> getKeys(final List<Connection> list) {
         return IntStream.range(0, list.size())
                 .filter(i -> list.get(i) != null)
                 .boxed()
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    public ArrayList<Double> activate(final ArrayList<Double> input, final boolean training) {
-        final ArrayList<Double> output = new ArrayList<>();
+    public List<Double> activate(final List<Double> input, final boolean training) {
+        final List<Double> output = new ArrayList<>();
 
         for (int i = 0; i < this.nodes.size(); i++) {
             if (this.nodes.get(i).type == NodeType.INPUT) {
@@ -194,8 +94,8 @@ public class Network {
         return output;
     }
 
-    public ArrayList<Double> noTraceActivate(final ArrayList<Double> input) {
-        final ArrayList<Double> output = new ArrayList<>();
+    public List<Double> noTraceActivate(final List<Double> input) {
+        final List<Double> output = new ArrayList<>();
 
         for (int i = 0; i < this.nodes.size(); i++) {
             if (this.nodes.get(i).type == NodeType.INPUT) {
@@ -288,11 +188,11 @@ public class Network {
             throw new RuntimeException("This node does not exist in the network!");
         }
 
-        final ArrayList<Node> gaters = new ArrayList<>();
+        final List<Node> gaters = new ArrayList<>();
 
         this.disconnect(node, node);
 
-        final ArrayList<Node> inputs = new ArrayList<>();
+        final List<Node> inputs = new ArrayList<>();
 
         for (int i = node.connections.in.size() - 1; i >= 0; i--) {
             final Connection connection = node.connections.in.get(i);
@@ -303,7 +203,7 @@ public class Network {
             this.disconnect(connection.from, node);
         }
 
-        final ArrayList<Node> outputs = new ArrayList<>();
+        final List<Node> outputs = new ArrayList<>();
         for (int i = node.connections.out.size() - 1; i >= 0; i--) {
             final Connection connection = node.connections.out.get(i);
             if (Mutation.SUB_NODE.keepGates() && connection.gater != null && !connection.gater.equals(node)) {
@@ -440,7 +340,7 @@ public class Network {
                 this.disconnect(conn1.from, conn1.to);
                 break;
             case ADD_GATE:
-                final ArrayList<Connection> allConnections1 = new ArrayList<>(this.connections);
+                final List<Connection> allConnections1 = new ArrayList<>(this.connections);
                 allConnections1.addAll(this.selfConnections);
 
                 final ArrayList<Connection> possible1 = new ArrayList<>();
@@ -626,10 +526,10 @@ public class Network {
             }
         }
         double error = 0;
-        for (int i = 0; i < testSet.length; i++) {
-            final ArrayList<Double> input = Utils.toList(testSet[i].input);
-            final double[] target = testSet[i].output;
-            final ArrayList<Double> output = this.noTraceActivate(input);
+        for (final DataSet dataSet : testSet) {
+            final List<Double> input = Utils.toList(dataSet.input);
+            final double[] target = dataSet.output;
+            final List<Double> output = this.noTraceActivate(input);
             error += cost.run(target, output);
         }
 
@@ -639,10 +539,10 @@ public class Network {
     private double trainSet(final DataSet[] trainSet, final int batchSize, final double currentRate, final double momentum, final Cost cost) {
         double errorSum = 0;
         for (int i = 0; i < trainSet.length; i++) {
-            final ArrayList<Double> input = Utils.toList(trainSet[i].input);
+            final List<Double> input = Utils.toList(trainSet[i].input);
             final double[] target = trainSet[i].output;
             final boolean update = (i + 1) % batchSize == 0 || (i + 1) == trainSet.length;
-            final ArrayList<Double> output = this.activate(input, true);
+            final List<Double> output = this.activate(input, true);
             this.propagate(currentRate, momentum, update, Utils.toList(target));
             errorSum += cost.run(target, output);
         }

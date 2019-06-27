@@ -30,17 +30,17 @@ public class LSTM extends Layer {
         this.outputGate.gate(output, Connection.Gating.OUTPUT);
 
         this.nodes = new ArrayList<>();
-        this.nodes.addAll(this.inputGate.nodes);
-        this.nodes.addAll(this.forgetGate.nodes);
-        this.nodes.addAll(this.memoryCell.nodes);
-        this.nodes.addAll(this.outputGate.nodes);
-        this.nodes.addAll(this.outputBlock.nodes);
+        this.nodes.add(this.inputGate);
+        this.nodes.add(this.forgetGate);
+        this.nodes.add(this.memoryCell);
+        this.nodes.add(this.outputGate);
+        this.nodes.add(this.outputBlock);
 
         this.output = this.outputBlock;
     }
 
     @Override
-    public ArrayList<Connection> input(final NodeGroup from, Connection.Method method, final double weight) {
+    public ArrayList<Connection> input(final NodeGroup from, Connection.Method method, final Double weight) {
         method = method == null ? Connection.Method.ALL_TO_ALL : method;
         final ArrayList<Connection> connections = new ArrayList<>();
 
@@ -57,7 +57,7 @@ public class LSTM extends Layer {
     }
 
     @Override
-    public ArrayList<Connection> input(final Layer from, final Connection.Method method, final double weight) {
+    public ArrayList<Connection> input(final Layer from, final Connection.Method method, final Double weight) {
         return this.input(from.output, method, weight);
     }
 }

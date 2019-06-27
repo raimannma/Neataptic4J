@@ -1,3 +1,6 @@
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -6,13 +9,13 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class Network {
-    final int input;
-    final int output;
+    int input;
+    int output;
     double score = 0;
     ArrayList<Node> nodes;
     ArrayList<Connection> connections;
     ArrayList<Connection> gates;
-    private ArrayList<Connection> selfConnections;
+    ArrayList<Connection> selfConnections;
     private double dropout;
 
     public Network(final int input, final int output) {
@@ -40,7 +43,7 @@ public class Network {
     }
 
     public static Network fromJSON(final String json) {
-        return null;
+        return new Gson().fromJson(json, Network.class);
     }
 
     public static Network merge(final Network network1, final Network network2) {
@@ -647,7 +650,8 @@ public class Network {
     }
 
     public String toJSON() {
-        return "";
+        final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        return gson.toJson(this);
     }
 
     public void set(final Double biasValue, final Activation squashValue) {
@@ -677,7 +681,7 @@ public class Network {
 
 
         options.network = this;
-        final NEAT neat = new NEAT(this.input, this.output, options);
+        final NEAT neat = new NEAT(this.input, this.output, options, set);
 
         double error = Integer.MIN_VALUE;
         double bestFitness = Integer.MIN_VALUE;
@@ -711,4 +715,7 @@ public class Network {
         return -error;
     }
 
+    public Network copy() {
+        return Network.fromJSON(this.toJSON());
+    }
 }

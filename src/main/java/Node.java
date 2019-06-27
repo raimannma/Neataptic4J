@@ -1,3 +1,5 @@
+import com.google.gson.JsonObject;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,9 +43,14 @@ public class Node {
         this(NodeType.NULL);
     }
 
-    public static Node fromJSON(final String json) {
-        //TODO
-        return null;
+
+    public static Node fromJSON(final JsonObject json) {
+        final Node node = new Node();
+        node.bias = json.get("bias").getAsDouble();
+        node.type = NodeType.valueOf(json.get("type").getAsString());
+        node.mask = json.get("mask").getAsDouble();
+        node.squash = Activation.valueOf(json.get("squash").getAsString());
+        return node;
     }
 
     public double activate(final Double input) {
@@ -345,9 +352,13 @@ public class Node {
         return false;
     }
 
-    public String toJSON() {
-        //TODO
-        return "";
+    public JsonObject toJSON() {
+        final JsonObject object = new JsonObject();
+        object.addProperty("bias", this.bias);
+        object.addProperty("type", this.type.name());
+        object.addProperty("squash", this.squash.name());
+        object.addProperty("mask", this.mask);
+        return object;
     }
 
     public Double activate() {
@@ -360,5 +371,9 @@ public class Node {
 
     public void propagate(final double rate, final double momentum, final boolean update) {
         this.propagate(rate, momentum, update, null);
+    }
+
+    public Node copy() {
+        return Node.fromJSON(this.toJSON());
     }
 }

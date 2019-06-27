@@ -1,3 +1,3 @@
 public enum NodeType {
-    NULL, HIDDEN, OUTPUT, CONSTANT, INPUT
+    NULL, HIDDEN, OUTPUT, CONSTANT, INPUT;
 }

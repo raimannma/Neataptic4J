@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.List;
 
 public class GRU extends Layer {
     private final NodeGroup updateGate;
@@ -26,11 +27,11 @@ public class GRU extends Layer {
         this.previousOutput.connect(this.updateGate, Connection.Method.ALL_TO_ALL, null);
         this.updateGate.connect(this.inverseUpdateGate, Connection.Method.ONE_TO_ONE, 1.0);
         this.previousOutput.connect(this.resetGate, Connection.Method.ALL_TO_ALL, null);
-        final ArrayList<Connection> reset = this.previousOutput.connect(this.memoryCell, Connection.Method.ALL_TO_ALL, null);
+        final List<Connection> reset = this.previousOutput.connect(this.memoryCell, Connection.Method.ALL_TO_ALL, null);
         this.resetGate.gate(reset, Connection.Gating.OUTPUT);
 
-        final ArrayList<Connection> update1 = this.previousOutput.connect(this.outputGroup, Connection.Method.ALL_TO_ALL, null);
-        final ArrayList<Connection> update2 = this.memoryCell.connect(this.outputGroup, Connection.Method.ALL_TO_ALL, null);
+        final List<Connection> update1 = this.previousOutput.connect(this.outputGroup, Connection.Method.ALL_TO_ALL, null);
+        final List<Connection> update2 = this.memoryCell.connect(this.outputGroup, Connection.Method.ALL_TO_ALL, null);
 
         this.updateGate.gate(update1, Connection.Gating.OUTPUT);
         this.inverseUpdateGate.gate(update2, Connection.Gating.OUTPUT);
@@ -38,18 +39,18 @@ public class GRU extends Layer {
         this.output.connect(this.previousOutput, Connection.Method.ONE_TO_ONE, 1.0);
 
         this.nodes = new ArrayList<>();
-        this.nodes.addAll(this.updateGate.nodes);
-        this.nodes.addAll(this.inverseUpdateGate.nodes);
-        this.nodes.addAll(this.resetGate.nodes);
-        this.nodes.addAll(this.memoryCell.nodes);
-        this.nodes.addAll(this.output.nodes);
-        this.nodes.addAll(this.previousOutput.nodes);
+        this.nodes.add(this.updateGate);
+        this.nodes.add(this.inverseUpdateGate);
+        this.nodes.add(this.resetGate);
+        this.nodes.add(this.memoryCell);
+        this.nodes.add(this.output);
+        this.nodes.add(this.previousOutput);
 
         this.output = this.outputGroup;
     }
 
     @Override
-    public ArrayList<Connection> input(final NodeGroup from, Connection.Method method, final double weight) {
+    public ArrayList<Connection> input(final NodeGroup from, Connection.Method method, final Double weight) {
         method = method == null ? Connection.Method.ALL_TO_ALL : method;
         final ArrayList<Connection> connections = new ArrayList<>(from.connect(this.updateGate, method, weight));
         connections.addAll(from.connect(this.resetGate, method, weight));
@@ -58,7 +59,7 @@ public class GRU extends Layer {
     }
 
     @Override
-    public ArrayList<Connection> input(final Layer from, final Connection.Method method, final double weight) {
+    public ArrayList<Connection> input(final Layer from, final Connection.Method method, final Double weight) {
         return this.input(from.output, method, weight);
     }
 }

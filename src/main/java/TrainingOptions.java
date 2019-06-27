@@ -32,6 +32,10 @@ public class TrainingOptions {
     private Selection selection;
     private Crossover[] crossover;
     private Mutation[] mutation;
+    private Integer connections;
+    private Integer backConnections;
+    private Integer selfConnections;
+    private Integer gates;
 
     public double getTargetError(final double defaultValue) {
         return this.targetError != null ? this.targetError : defaultValue;
@@ -147,5 +151,21 @@ public class TrainingOptions {
 
     public Network getNetwork(final Network defaultValue) {
         return this.network == null ? defaultValue : this.network;
+    }
+
+    public int getConnections(final int defaultValue) {
+        return this.connections == null ? defaultValue : this.connections;
+    }
+
+    public int getBackConnections(final int defaultValue) {
+        return this.backConnections == null ? defaultValue : this.backConnections;
+    }
+
+    public int getSelfConnections(final int defaultValue) {
+        return this.selfConnections == null ? defaultValue : this.selfConnections;
+    }
+
+    public int getGates(final int defaultValue) {
+        return this.gates == null ? defaultValue : this.gates;
     }
 }

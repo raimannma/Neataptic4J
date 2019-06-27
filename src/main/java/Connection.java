@@ -1,3 +1,4 @@
+import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -38,9 +39,30 @@ public class Connection {
         return (int) Math.round(0.5 * (a + b) * (a + b + 1) + b);
     }
 
-    public String toJSON() {
-        //TODO
-        return "";
+    public static Connection fromJSON(final JsonObject json) {
+        final Connection connection = new Connection(null, null, null);
+        connection.weight = json.get("weight").getAsDouble();
+        return connection;
+    }
+
+    public JsonObject toJSON() {
+        final JsonObject json = new JsonObject();
+        json.addProperty("weight", this.weight);
+        return json;
+    }
+
+    public Connection copy() {
+        final Connection copy = new Connection(this.from.copy(), this.to.copy(), this.weight);
+        copy.gain = this.gain;
+        if (this.gater != null) {
+            copy.gater = this.gater.copy();
+        }
+        copy.elegibility = this.elegibility;
+        copy.xTraceValues = new ArrayList<>(this.xTraceValues);
+        copy.xTraceNodes = new ArrayList<>(this.xTraceNodes);
+        copy.previousDeltaWeight = this.previousDeltaWeight;
+        copy.totalDeltaWeight = this.totalDeltaWeight;
+        return copy;
     }
 
     public enum Method {

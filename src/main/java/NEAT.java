@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.stream.IntStream;
 
 public class NEAT {
     private final boolean equal;
@@ -19,10 +20,14 @@ public class NEAT {
     private final Selection selection;
     private final boolean fitnessPopulation;
     private final Network template;
+    private final TrainingOptions options;
+    private final DataSet[] set;
     private int generation;
     private ArrayList<Network> population;
 
-    public NEAT(final int input, final int output, TrainingOptions options) {
+    public NEAT(final int input, final int output, TrainingOptions options, final DataSet[] set) {
+        this.options = options;
+        this.set = set;
         this.input = input;
         this.output = output;
         options = options == null ? new TrainingOptions() : options;
@@ -71,14 +76,20 @@ public class NEAT {
     }
 
 
-    private double fitness(final int amount, final Network genome, final DataSet[] set, final Cost cost, final double growth) {
-        double score = 0;
-        for (int i = 0; i < amount; i++) {
-            score -= genome.test(set, cost);
+    private void fitness(final Iterable<Network> population) {
+        for (final Network network : population) {
+            this.fitness(network);
         }
+    }
 
-        score -= (genome.nodes.size() - genome.input - genome.output + genome.connections.size() + genome.gates.size()) * growth;
+    private double fitness(final Network genome) {
+        final int amount = this.options.getAmount(1);
+        final Cost cost = this.options.getCost(Cost.MSE);
+        final double growth = this.options.getGrowth(0.0001);
 
+        final double score = IntStream.range(0, amount).mapToDouble(i -> -genome.test(this.set, cost)).sum() -
+                (genome.nodes.size() - genome.input - genome.output + genome.connections.size() + genome.gates.size()) * growth;
+        genome.score = score / amount;
         return score / amount;
     }
 
@@ -90,7 +101,7 @@ public class NEAT {
         if (this.population.get(this.population.size() - 1).score == -1) {
             this.evaluate();
         }
-        sort();
+        this.sort();
         final Network fittest = this.population.get(0).copy();
         fittest.score = this.population.get(0).score;
 
@@ -116,6 +127,10 @@ public class NEAT {
         }
         this.generation++;
         return fittest;
+    }
+
+    private void sort() {
+        this.population.sort(Comparator.comparingDouble(value -> value.score));
     }
 
     private void evaluate() {
@@ -144,11 +159,10 @@ public class NEAT {
         switch (this.selection) {
             case POWER:
                 if (this.population.get(0).score < this.population.get(1).score) {
-                    sort();
+                    this.sort();
                 }
                 final int index = (int) Math.floor(Math.pow(Math.random(), this.selection.power()));
                 return this.population.get(index);
-            break;
             case FITNESS_PROPORTIONATE:
                 double totalFitness = 0;
                 double minimalFitness = 0;
@@ -169,7 +183,6 @@ public class NEAT {
                     }
                 }
                 return this.population.get((int) Math.floor(Math.random() * this.population.size()));
-            break;
             case TOURNAMENT:
                 if (this.selection.size() > this.popSize) {
                     throw new RuntimeException("Your tournament size should be lower than the population size, please change methods.selection.TOURNAMENT.size");
@@ -186,9 +199,8 @@ public class NEAT {
                     }
                 }
                 break;
-            default:
-                return null;
         }
+        throw new RuntimeException("Should not end here!");
     }
 
     public String toJSON() {
@@ -228,7 +240,7 @@ public class NEAT {
         if (this.population.get(this.population.size() - 1).score == -1) {
             this.evaluate();
         }
-        sort();
+        this.sort();
         return this.population.get(0);
     }
 

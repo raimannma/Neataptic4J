@@ -7,18 +7,18 @@ public class Dense extends Layer {
         super(size);
         final NodeGroup block = new NodeGroup(size);
 
-        this.nodes.addAll(block.nodes);
+        this.nodes.add(block);
         this.output = block;
     }
 
     @Override
-    public ArrayList<Connection> input(final NodeGroup from, Connection.Method method, final double weight) {
+    public ArrayList<Connection> input(final NodeGroup from, Connection.Method method, final Double weight) {
         method = method == null ? Connection.Method.ALL_TO_ALL : method;
         return from.connect(this.output, method, weight);
     }
 
     @Override
-    public ArrayList<Connection> input(final Layer from, final Connection.Method method, final double weight) {
+    public ArrayList<Connection> input(final Layer from, final Connection.Method method, final Double weight) {
         return this.input(from.output, method, weight);
     }
 }

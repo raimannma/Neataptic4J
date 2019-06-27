@@ -1,17 +1,19 @@
 import java.util.ArrayList;
 import java.util.Collection;
 
-public abstract class Layer {
+public abstract class Layer extends NodeGroup {
     private final ConnectionHistory connections;
     ArrayList<NodeGroup> nodes;
     NodeGroup output;
 
     public Layer(final int size) {
+        super(size);
         this.output = null;
         this.nodes = new ArrayList<>();
         this.connections = new ConnectionHistory();
     }
 
+    @Override
     public ArrayList<Double> activate(final double[] value) {
         final ArrayList<Double> values = new ArrayList<>();
 
@@ -28,6 +30,7 @@ public abstract class Layer {
         return values;
     }
 
+    @Override
     public void propagate(final double rate, final double momentum, final double[] target) {
         for (int i = this.nodes.size() - 1; i >= 0; i--) {
             if (target == null) {
@@ -38,14 +41,17 @@ public abstract class Layer {
         }
     }
 
+    @Override
     public ArrayList<Connection> connect(final NodeGroup target, final Connection.Method method, final Double weight) {
         return this.output.connect(target, method, weight);
     }
 
+    @Override
     public ArrayList<Connection> connect(final Node target, final Connection.Method method, final Double weight) {
         return this.output.connect(target, method, weight);
     }
 
+    @Override
     public ArrayList<Connection> connect(final Layer target, final Connection.Method method, final Double weight) {
         return target.input(this, method, weight);
     }
@@ -88,11 +94,12 @@ public abstract class Layer {
         }
     }
 
+    @Override
     public void clear() {
         this.nodes.forEach(NodeGroup::clear);
     }
 
-    public abstract ArrayList<Connection> input(final NodeGroup from, final Connection.Method method, final double weight);
+    public abstract ArrayList<Connection> input(final NodeGroup from, final Connection.Method method, final Double weight);
 
-    public abstract ArrayList<Connection> input(final Layer from, final Connection.Method method, final double weight);
+    public abstract ArrayList<Connection> input(final Layer from, final Connection.Method method, final Double weight);
 }

@@ -3391,7 +3391,8 @@
                     var inputs = [];
                     var outputs = [];
                     for (i = nodes.length - 1; i >= 0; i--) {
-                        if (nodes[i].type === 'output' || nodes[i].connections.out.length + nodes[i].connections.gated.length === 0) {
+                        if (nodes[i].type === 'output' ||
+                            nodes[i].connections.out.length + nodes[i].connections.gated.length === 0) {
                             nodes[i].type = 'output';
                             network.output++;
                             outputs.push(nodes[i]);

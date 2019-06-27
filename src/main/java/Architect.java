@@ -1,2 +1,3 @@
-public enum Architect {
+public class Architect {
+
 }

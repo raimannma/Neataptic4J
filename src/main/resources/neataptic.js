@@ -1045,7 +1045,7 @@
                             break;
                         case mutation.MOD_ACTIVATION:
                             // Has no effect on input node, so they are excluded
-                            if (!method.mutateOutput() &&
+                            if (!method.mutateOutput &&
                                 this.input + this.output === this.nodes.length) {
                                 if (config.warnings) console.warn('No nodes that allow mutation of activation function');
                                 break;
@@ -2260,7 +2260,8 @@
                                 for (k = this.connections.out.length - 1; k >= 0; k--) {
                                     let conn = this.connections.out[k];
 
-                                    if (conn.from === this.nodes[i] && conn.to === target.nodes[j]) {
+                                    if (conn.from === this.nodes[i] &&
+                                        conn.to === target.nodes[j]) {
                                         this.connections.out.splice(k, 1);
                                         break;
                                     }
@@ -2270,7 +2271,8 @@
                                     for (k = this.connections.in.length - 1; k >= 0; k--) {
                                         let conn = this.connections.in[k];
 
-                                        if (conn.from === target.nodes[j] && conn.to === this.nodes[i]) {
+                                        if (conn.from === target.nodes[j] &&
+                                            conn.to === this.nodes[i]) {
                                             this.connections.in.splice(k, 1);
                                             break;
                                         }

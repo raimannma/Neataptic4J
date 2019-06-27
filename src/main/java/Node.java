@@ -12,8 +12,8 @@ public class Node {
     final ConnectionHistory connections;
     private final int prevDeltaBias;
     int mask;
-    private Activation squash;
-    private double bias;
+    Activation squash;
+    double bias;
     private int totalDeltaBias;
     private double errorGated;
     private double errorResponsibility;

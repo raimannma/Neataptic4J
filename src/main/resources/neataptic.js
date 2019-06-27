@@ -1015,7 +1015,9 @@
                             for (i = 0; i < this.connections.length; i++) {
                                 let conn = this.connections[i];
                                 // Check if it is not disabling a node
-                                if (conn.from.connections.out.length > 1 && conn.to.connections.in.length > 1 && this.nodes.indexOf(conn.to) > this.nodes.indexOf(conn.from)) {
+                                if (conn.from.connections.out.length > 1 &&
+                                    conn.to.connections.in.length > 1 &&
+                                    this.nodes.indexOf(conn.to) > this.nodes.indexOf(conn.from)) {
                                     possible.push(conn);
                                 }
                             }
@@ -1043,7 +1045,8 @@
                             break;
                         case mutation.MOD_ACTIVATION:
                             // Has no effect on input node, so they are excluded
-                            if (!method.mutateOutput && this.input + this.output === this.nodes.length) {
+                            if (!method.mutateOutput &&
+                                this.input + this.output === this.nodes.length) {
                                 if (config.warnings) console.warn('No nodes that allow mutation of activation function');
                                 break;
                             }

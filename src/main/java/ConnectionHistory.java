@@ -1,15 +1,23 @@
 import java.util.ArrayList;
 
 public class ConnectionHistory {
-    final ArrayList<Connection> in;
-    final Connection self;
-    final ArrayList<Connection> gated;
-    final ArrayList<Connection> out;
+    ArrayList<Connection> in;
+    Connection self;
+    ArrayList<Connection> selfArr;
+    ArrayList<Connection> gated;
+    ArrayList<Connection> out;
+    Node node;
 
     public ConnectionHistory(final Node node) {
+        this();
+        this.node = node;
+        this.self = new Connection(node, node, 0.0);
+    }
+
+    public ConnectionHistory() {
         this.in = new ArrayList<>();
         this.out = new ArrayList<>();
         this.gated = new ArrayList<>();
-        this.self = new Connection(node, node, 0);
+        this.selfArr = new ArrayList<>();
     }
 }

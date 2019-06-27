@@ -8,10 +8,10 @@ import java.util.List;
 import static enums.Mutation.NULL;
 
 public class Node {
-    final NodeType type;
-    final ConnectionHistory connections;
-    private final int prevDeltaBias;
-    int mask;
+    public int index;
+    ConnectionHistory connections;
+    NodeType type;
+    double mask;
     Activation squash;
     double bias;
     private int totalDeltaBias;
@@ -33,7 +33,7 @@ public class Node {
         this.state = 0;
         this.old = 0;
         this.mask = 1;
-        this.prevDeltaBias = 0;
+        this.previousDeltaBias = 0;
         this.totalDeltaBias = 0;
         this.connections = new ConnectionHistory(this);
 
@@ -41,6 +41,10 @@ public class Node {
         this.errorProjected = 0;
         this.errorGated = 0;
 
+    }
+
+    public Node() {
+        this(NodeType.NULL);
     }
 
     public static Node fromJSON(final String json) {

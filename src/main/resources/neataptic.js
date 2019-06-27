@@ -1195,14 +1195,6 @@
 
                     options = options || {};
 
-                    // Warning messages
-                    if (typeof options.rate === 'undefined') {
-                        if (config.warnings) console.warn('Using default learning rate, please define a rate!');
-                    }
-                    if (typeof options.iterations === 'undefined') {
-                        if (config.warnings) console.warn('No target iterations given, running until error is reached!');
-                    }
-
                     // Read the options
                     var targetError = options.error || 0.05;
                     var cost = options.cost || methods.cost.MSE;
@@ -1344,112 +1336,6 @@
                 },
 
                 /**
-                 * Creates a json that can be used to create a graph with d3 and webcola
-                 */
-                graph: function (width, height) {
-                    var input = 0;
-                    var output = 0;
-
-                    var json = {
-                        nodes: [],
-                        links: [],
-                        constraints: [{
-                            type: 'alignment',
-                            axis: 'x',
-                            offsets: []
-                        }, {
-                            type: 'alignment',
-                            axis: 'y',
-                            offsets: []
-                        }]
-                    };
-
-                    var i;
-                    for (i = 0; i < this.nodes.length; i++) {
-                        var node = this.nodes[i];
-
-                        if (node.type === 'input') {
-                            if (this.input === 1) {
-                                json.constraints[0].offsets.push({
-                                    node: i,
-                                    offset: 0
-                                });
-                            } else {
-                                json.constraints[0].offsets.push({
-                                    node: i,
-                                    offset: 0.8 * width / (this.input - 1) * input++
-                                });
-                            }
-                            json.constraints[1].offsets.push({
-                                node: i,
-                                offset: 0
-                            });
-                        } else if (node.type === 'output') {
-                            if (this.output === 1) {
-                                json.constraints[0].offsets.push({
-                                    node: i,
-                                    offset: 0
-                                });
-                            } else {
-                                json.constraints[0].offsets.push({
-                                    node: i,
-                                    offset: 0.8 * width / (this.output - 1) * output++
-                                });
-                            }
-                            json.constraints[1].offsets.push({
-                                node: i,
-                                offset: -0.8 * height
-                            });
-                        }
-
-                        json.nodes.push({
-                            id: i,
-                            name: node.type === 'hidden' ? node.squash.name : node.type.toUpperCase(),
-                            activation: node.activation,
-                            bias: node.bias
-                        });
-                    }
-
-                    var connections = this.connections.concat(this.selfconns);
-                    for (i = 0; i < connections.length; i++) {
-                        var connection = connections[i];
-                        if (connection.gater == null) {
-                            json.links.push({
-                                source: this.nodes.indexOf(connection.from),
-                                target: this.nodes.indexOf(connection.to),
-                                weight: connection.weight
-                            });
-                        } else {
-                            // Add a gater 'node'
-                            var index = json.nodes.length;
-                            json.nodes.push({
-                                id: index,
-                                activation: connection.gater.activation,
-                                name: 'GATE'
-                            });
-                            json.links.push({
-                                source: this.nodes.indexOf(connection.from),
-                                target: index,
-                                weight: 1 / 2 * connection.weight
-                            });
-                            json.links.push({
-                                source: index,
-                                target: this.nodes.indexOf(connection.to),
-                                weight: 1 / 2 * connection.weight
-                            });
-                            json.links.push({
-                                source: this.nodes.indexOf(connection.gater),
-                                target: index,
-                                weight: connection.gater.activation,
-                                gate: true
-                            });
-                        }
-                    }
-
-                    return json;
-                },
-
-                /**
                  * Convert the network to a json object
                  */
                 toJSON: function () {
@@ -1541,69 +1427,17 @@
                         options.iterations = 0; // run until target error
                     }
 
-                    var fitnessFunction;
-                    if (threads === 1) {
-                        // Create the fitness function
-                        fitnessFunction = function (genome) {
-                            var score = 0;
-                            for (var i = 0; i < amount; i++) {
-                                score -= genome.test(set, cost).error;
-                            }
-
-                            score -= (genome.nodes.length - genome.input - genome.output + genome.connections.length + genome.gates.length) * growth;
-                            score = isNaN(score) ? -Infinity : score; // this can cause problems with fitness proportionate selection
-
-                            return score / amount;
-                        };
-                    } else {
-                        // Serialize the dataset
-                        var converted = multi.serializeDataSet(set);
-
-                        // Create workers, send datasets
-                        var workers = [];
-                        if (typeof window === 'undefined') {
-                            for (var i = 0; i < threads; i++) {
-                                workers.push(new multi.workers.node.TestWorker(converted, cost));
-                            }
-                        } else {
-                            for (var i = 0; i < threads; i++) {
-                                workers.push(new multi.workers.browser.TestWorker(converted, cost));
-                            }
+                    var fitnessFunction = function (genome) {
+                        var score = 0;
+                        for (var i = 0; i < amount; i++) {
+                            score -= genome.test(set, cost).error;
                         }
 
-                        fitnessFunction = function (population) {
-                            return new Promise((resolve, reject) = > {
-                                // Create a queue
-                                var queue = population.slice();
-                            var done = 0;
+                        score -= (genome.nodes.length - genome.input - genome.output + genome.connections.length + genome.gates.length) * growth;
+                        score = isNaN(score) ? -Infinity : score; // this can cause problems with fitness proportionate selection
 
-                            // Start worker function
-                            var startWorker = function (worker) {
-                                if (!queue.length) {
-                                    if (++done === threads) resolve();
-                                    return;
-                                }
-
-                                var genome = queue.shift();
-
-                                worker.evaluate(genome).then(function (result) {
-                                    genome.score = -result;
-                                    genome.score -= (genome.nodes.length - genome.input - genome.output +
-                                        genome.connections.length + genome.gates.length) * growth;
-                                    genome.score = isNaN(parseFloat(result)) ? -Infinity : genome.score;
-                                    startWorker(worker);
-                                });
-                            };
-
-                            for (var i = 0; i < workers.length; i++) {
-                                startWorker(workers[i]);
-                            }
-                        })
-                            ;
-                        };
-
-                        options.fitnessPopulation = true;
-                    }
+                        return score / amount;
+                    };
 
                     // Intialise the NEAT instance
                     options.network = this;
@@ -1614,8 +1448,7 @@
                     var bestGenome;
 
                     while (error < -targetError && (options.iterations === 0 || neat.generation < options.iterations)) {
-                        let fittest = await
-                        neat.evolve();
+                        let fittest = neat.evolve();
                         let fitness = fittest.score;
                         error = fitness + (fittest.nodes.length - fittest.input - fittest.output + fittest.connections.length + fittest.gates.length) * growth;
 
@@ -1633,10 +1466,6 @@
                         }
                     }
 
-                    if (threads > 1) {
-                        for (var i = 0; i < workers.length; i++) workers[i].terminate();
-                    }
-
                     if (typeof bestGenome !== 'undefined') {
                         this.nodes = bestGenome.nodes;
                         this.connections = bestGenome.connections;
@@ -1652,139 +1481,7 @@
                         time: Date.now() - start
                     };
                 },
-
-                /**
-                 * Creates a standalone function of the network which can be run without the
-                 * need of a library
-                 */
-                standalone: function () {
-                    var present = [];
-                    var activations = [];
-                    var states = [];
-                    var lines = [];
-                    var functions = [];
-
-                    var i;
-                    for (i = 0; i < this.input; i++) {
-                        var node = this.nodes[i];
-                        activations.push(node.activation);
-                        states.push(node.state);
-                    }
-
-                    lines.push('for(var i = 0; i < input.length; i++) A[i] = input[i];');
-
-                    // So we don't have to use expensive .indexOf()
-                    for (i = 0; i < this.nodes.length; i++) {
-                        this.nodes[i].index = i;
-                    }
-
-                    for (i = this.input; i < this.nodes.length; i++) {
-                        let node = this.nodes[i];
-                        activations.push(node.activation);
-                        states.push(node.state);
-
-                        var functionIndex = present.indexOf(node.squash.name);
-
-                        if (functionIndex === -1) {
-                            functionIndex = present.length;
-                            present.push(node.squash.name);
-                            functions.push(node.squash.toString());
-                        }
-
-                        var incoming = [];
-                        for (var j = 0; j < node.connections.in.length; j++) {
-                            var conn = node.connections.in[j];
-                            var computation = `A[${conn.from.index}] * ${conn.weight}`;
-
-                            if (conn.gater != null) {
-                                computation += ` * A[${conn.gater.index}]`;
-                            }
-
-                            incoming.push(computation);
-                        }
-
-                        if (node.connections.self.weight) {
-                            let conn = node.connections.self;
-                            let computation = `S[${i}] * ${conn.weight}`;
-
-                            if (conn.gater != null) {
-                                computation += ` * A[${conn.gater.index}]`;
-                            }
-
-                            incoming.push(computation);
-                        }
-
-                        var line1 = `S[${i}] = ${incoming.join(' + ')} + ${node.bias};`;
-                        var line2 = `A[${i}] = F[${functionIndex}](S[${i}])${!node.mask ? ' * ' + node.mask : ''};`;
-                        lines.push(line1);
-                        lines.push(line2);
-                    }
-
-                    var output = [];
-                    for (i = this.nodes.length - this.output; i < this.nodes.length; i++) {
-                        output.push(`A[${i}]`);
-                    }
-
-                    output = `return [${output.join(',')}];`;
-                    lines.push(output);
-
-                    var total = '';
-                    total += `var F = [${functions.toString()}];\r\n`;
-                    total += `var A = [${activations.toString()}];\r\n`;
-                    total += `var S = [${states.toString()}];\r\n`;
-                    total += `function activate(input){\r\n${lines.join('\r\n')}\r\n}`;
-
-                    return total;
-                },
-
-                /**
-                 * Serialize to send to workers efficiently
-                 */
-                serialize: function () {
-                    var activations = [];
-                    var states = [];
-                    var conns = [];
-                    var squashes = [
-                        'LOGISTIC', 'TANH', 'IDENTITY', 'STEP', 'RELU', 'SOFTSIGN', 'SINUSOID',
-                        'GAUSSIAN', 'BENT_IDENTITY', 'BIPOLAR', 'BIPOLAR_SIGMOID', 'HARD_TANH',
-                        'ABSOLUTE', 'INVERSE', 'SELU'
-                    ];
-
-                    conns.push(this.input);
-                    conns.push(this.output);
-
-                    var i;
-                    for (i = 0; i < this.nodes.length; i++) {
-                        let node = this.nodes[i];
-                        node.index = i;
-                        activations.push(node.activation);
-                        states.push(node.state);
-                    }
-
-                    for (i = this.input; i < this.nodes.length; i++) {
-                        let node = this.nodes[i];
-                        conns.push(node.index);
-                        conns.push(node.bias);
-                        conns.push(squashes.indexOf(node.squash.name));
-
-                        conns.push(node.connections.self.weight);
-                        conns.push(node.connections.self.gater == null ? -1 : node.connections.self.gater.index);
-
-                        for (var j = 0; j < node.connections.in.length; j++) {
-                            let conn = node.connections.in[j];
-
-                            conns.push(conn.from.index);
-                            conns.push(conn.weight);
-                            conns.push(conn.gater == null ? -1 : conn.gater.index);
-                        }
-
-                        conns.push(-2); // stop token -> next node
-                    }
-
-                    return [activations, states, conns];
-                }
-            };
-
+            }
             /**
              * Convert a json object to a network
              */
@@ -2379,7 +2076,8 @@
                                 for (k = this.connections.out.length - 1; k >= 0; k--) {
                                     let conn = this.connections.out[k];
 
-                                    if (conn.from === this.nodes[i] && conn.to === target.nodes[j]) {
+                                    if (conn.from === this.nodes[i] &&
+                                        conn.to === target.nodes[j]) {
                                         this.connections.out.splice(k, 1);
                                         break;
                                     }

@@ -34,12 +34,18 @@ public class Connection {
         this.xTraceValues = new ArrayList<>();
     }
 
+    public static int getInnovationID(final double a, final double b) {
+        return (int) Math.round(0.5 * (a + b) * (a + b + 1) + b);
+    }
+
     public String toJSON() {
         //TODO
         return "";
     }
 
-    public double getInnovationID(final double a, final double b) {
-        return 0.5 * (a + b) * (a + b + 1) + b;
+    public enum Method {
+        ONE_TO_ONE, ALL_TO_ELSE, ALL_TO_ALL
     }
+
+    public enum Gating {OUTPUT, SELF, INPUT}
 }

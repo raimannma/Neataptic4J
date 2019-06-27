@@ -1,18 +1,20 @@
-import enums.Activation;
-import enums.Mutation;
-import enums.NodeType;
+import enums.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Network {
-    private final ArrayList<Node> nodes;
-    private final int dropout;
-    private final ArrayList<Connection> connections;
-    private final int input;
-    private final int output;
-    private final ArrayList<Connection> selfConnections;
-    private final ArrayList<Connection> gates;
+    final int input;
+    final int output;
+    private final double score = 0;
+    ArrayList<Node> nodes;
+    ArrayList<Connection> connections;
+    ArrayList<Connection> gates;
+    private ArrayList<Connection> selfConnections;
+    private double dropout;
 
     public Network(final int input, final int output) {
         this.input = input;
@@ -36,6 +38,133 @@ public class Network {
                 this.connect(this.nodes.get(i), this.nodes.get(j), weight);
             }
         }
+    }
+
+    public static Network fromJSON(final String json) {
+        return null;
+    }
+
+    public static Network merge(final Network network1, final Network network2) {
+        if (network1.output != network2.output) {
+            throw new RuntimeException("Output size of network1 should be the same as the input size of network2!");
+        }
+        network2.connections.stream()
+                .filter(conn -> conn.from.type == NodeType.INPUT)
+                .forEach(conn -> {
+                    final int index = network2.nodes.indexOf(conn.from);
+                    conn.from = network1.nodes.get(network1.nodes.size() - 1 - index);
+                });
+        if (network2.input > 0) {
+            network2.nodes.subList(0, network2.input).clear();
+        }
+
+        for (int i = network1.nodes.size() - network1.output; i < network1.nodes.size(); i++) {
+            network1.nodes.get(i).type = NodeType.HIDDEN;
+        }
+
+        network1.connections.addAll(network2.connections);
+        network1.nodes.addAll(network2.nodes);
+        return network1;
+    }
+
+    public static Network crossOver(final Network network1, final Network network2, final boolean equal) {
+        if (network1.input != network2.input || network1.output != network2.output) {
+            throw new RuntimeException("Networks don't have the same input/output size!");
+        }
+        final Network offspring = new Network(network1.input, network1.output);
+        offspring.connections = new ArrayList<>();
+        offspring.nodes = new ArrayList<>();
+
+        final double score1 = network1.score;
+        final double score2 = network2.score;
+        final int size;
+        if (equal || score1 == score2) {
+            final int max = Math.max(network1.nodes.size(), network2.nodes.size());
+            final int min = Math.min(network1.nodes.size(), network2.nodes.size());
+            size = (int) Math.floor(Math.random() * (max - min + 1) + 1);
+        } else if (score1 > score2) {
+            size = network1.nodes.size();
+        } else {
+            size = network2.nodes.size();
+        }
+
+        final int outputSize = network1.output;
+
+        for (int i = 0; i < network1.nodes.size(); i++) {
+            network1.nodes.get(i).index = i;
+        }
+        for (int i = 0; i < network2.nodes.size(); i++) {
+            network2.nodes.get(i).index = i;
+        }
+
+        for (int i = 0; i < size; i++) {
+            Node node;
+            if (i < size - outputSize) {
+                final double random = Math.random();
+                node = random >= 0.5 ? network1.nodes.get(i) : network2.nodes.get(i);
+                final Node other = random < 0.5 ? network1.nodes.get(i) : network2.nodes.get(i);
+                if (node == null || node.type == NodeType.OUTPUT) {
+                    node = other;
+                }
+            } else {
+                if (Math.random() >= 0.5) {
+                    node = network1.nodes.get(network1.nodes.size() + i - size);
+                } else {
+                    node = network2.nodes.get(network2.nodes.size() + i - size);
+                }
+            }
+
+            final Node newNode = new Node(node.type);
+            newNode.bias = node.bias;
+            newNode.squash = node.squash;
+            newNode.type = node.type;
+
+            offspring.nodes.add(newNode);
+        }
+        final ArrayList<Connection> n1Connections = new ArrayList<>();
+        final ArrayList<Connection> n2Connections = new ArrayList<>();
+
+        network1.connections
+                .forEach(conn -> n1Connections.set(Connection.getInnovationID(conn.from.index, conn.to.index), conn));
+        network1.selfConnections
+                .forEach(conn -> n1Connections.set(Connection.getInnovationID(conn.from.index, conn.to.index), conn));
+        network2.connections
+                .forEach(conn -> n1Connections.set(Connection.getInnovationID(conn.from.index, conn.to.index), conn));
+        network2.selfConnections
+                .forEach(conn -> n1Connections.set(Connection.getInnovationID(conn.from.index, conn.to.index), conn));
+
+        final ArrayList<Connection> connections = new ArrayList<>();
+        final ArrayList<Integer> keys1 = Utils.getKeys(n1Connections);
+        final ArrayList<Integer> keys2 = Utils.getKeys(n2Connections);
+        for (int i = keys1.size() - 1; i >= 0; i--) {
+            if (n2Connections.get(keys1.get(i)) != null) {
+                final Connection conn = Math.random() >= 0.5 ? n1Connections.get(keys1.get(i)) : n2Connections.get(keys1.get(i));
+                connections.add(conn);
+                n2Connections.set(keys1.get(1), null);
+            } else if (score1 >= score2 || equal) {
+                connections.add(n1Connections.get(keys1.get(1)));
+            }
+        }
+
+        if (score2 >= score1 || equal) {
+            keys2.stream()
+                    .filter(index -> n2Connections.get(index) != null)
+                    .map(n2Connections::get)
+                    .forEach(connections::add);
+        }
+        for (final Connection connData : connections) {
+            if (connData.to.index < size && connData.from.index < size) {
+                final Node from = offspring.nodes.get(connData.from.index);
+                final Node to = offspring.nodes.get(connData.to.index);
+                final Connection conn = offspring.connect(from, to).get(0);
+
+                conn.weight = connData.weight;
+                if (connData.gater.index != -1 && connData.gater.index < size) {
+                    offspring.gate(offspring.nodes.get(connData.gater.index), conn);
+                }
+            }
+        }
+        return offspring;
     }
 
     public ArrayList<Double> activate(final ArrayList<Double> input, final boolean training) {
@@ -92,7 +221,6 @@ public class Network {
             node.clear();
         }
     }
-
 
     public List<Connection> connect(final Node from, final Node to) {
         return this.connect(from, to, null);
@@ -386,4 +514,195 @@ public class Network {
                 break;
         }
     }
+
+    public double train(DataSet[] set, TrainingOptions options) {
+        if (set[0].input.length != this.input || set[0].output.length != this.output) {
+            throw new RuntimeException("Dataset input/output size should be same as network input/output size!");
+        }
+        if (options == null) {
+            options = new TrainingOptions();
+        }
+
+        double targetError = options.getTargetError(0.05);
+        final Cost cost = options.getCost(Cost.MSE);
+        final double baseRate = options.getRate(0.3);
+        final double dropout = options.getDropout(0);
+        final double momentum = options.getMomentum(0);
+        final int batchSize = options.getBatchSize(1);
+        final Rate ratePolicy = options.getRatePolicy(Rate.FIXED);
+
+        if (batchSize > set.length) {
+            throw new RuntimeException("Batch size must be smaller or equal to dataset length!");
+        } else if (options.iterations == null && options.error == null) {
+            throw new RuntimeException("At least one of the following options must be specified: error, iterations");
+        } else if (options.error == null) {
+            targetError = -1; // run until iterations
+        } else if (options.iterations == null) {
+            options.iterations = 0; // run until target error
+        }
+        this.dropout = dropout;
+        DataSet[] trainSet = set;
+        DataSet[] testSet = null;
+        if (options.crossValidate) {
+            final int numTrain = (int) Math.ceil((1 - options.crossValidateTestSize) * set.length);
+            trainSet = Arrays.copyOfRange(set, 0, numTrain);
+            testSet = Arrays.copyOfRange(set, numTrain, set.length);
+        }
+        double currentRate;
+        int iteration = 0;
+        double error = 1;
+        while (error > targetError && (options.iterations == 0 || iteration < options.iterations)) {
+            if (options.crossValidate && error <= options.crossValidateTestError) {
+                break;
+            }
+            iteration++;
+            currentRate = ratePolicy.getRate(baseRate, iteration);
+
+            if (options.crossValidate) {
+                error = this.trainSet(trainSet, batchSize, currentRate, momentum, cost);
+                if (options.clear) {
+                    this.clear();
+                }
+
+                error = this.test(testSet, cost);
+                if (options.clear) {
+                    this.clear();
+                }
+            } else {
+                error = this.trainSet(set, batchSize, currentRate, momentum, cost);
+                if (options.clear) {
+                    this.clear();
+                }
+            }
+
+            if (options.shuffle) {
+                final List<DataSet> list = Arrays.stream(set).collect(Collectors.toList());
+                Collections.shuffle(list);
+                final DataSet[] newSet = new DataSet[set.length];
+                for (int i = 0; i < list.size(); i++) {
+                    newSet[i] = list.get(i);
+                }
+                set = newSet;
+            }
+            System.out.println("Iteration: " + iteration + "; Error: " + error + "; Rate: " + currentRate);
+
+            if (options.schedule && iteration % options.scheduleIterations == 0) {
+                options.scheduleError = error;
+                options.scheduleIteration = iteration;
+            }
+        }
+        if (options.clear) {
+            this.clear();
+        }
+
+        if (dropout != 0) {
+            for (final Node node : this.nodes) {
+                if (node.type == NodeType.HIDDEN || node.type == NodeType.CONSTANT) {
+                    node.mask = 1 - dropout;
+                }
+            }
+        }
+        return error;
+    }
+
+    protected double test(final DataSet[] testSet, Cost cost) {
+        if (cost == null) {
+            cost = Cost.MSE;
+        }
+        if (this.dropout != 0) {
+            for (final Node node : this.nodes) {
+                if (node.type == NodeType.HIDDEN || node.type == NodeType.CONSTANT) {
+                    node.mask = 1 - this.dropout;
+                }
+            }
+        }
+        double error = 0;
+        for (int i = 0; i < testSet.length; i++) {
+            final ArrayList<Double> input = Utils.toList(testSet[i].input);
+            final double[] target = testSet[i].output;
+            final ArrayList<Double> output = this.noTraceActivate(input);
+            error += cost.run(target, output);
+        }
+
+        return error / testSet.length;
+    }
+
+    private double trainSet(final DataSet[] trainSet, final int batchSize, final double currentRate, final double momentum, final Cost cost) {
+        double errorSum = 0;
+        for (int i = 0; i < trainSet.length; i++) {
+            final ArrayList<Double> input = Utils.toList(trainSet[i].input);
+            final double[] target = trainSet[i].output;
+            final boolean update = (i + 1) % batchSize == 0 || (i + 1) == trainSet.length;
+            final ArrayList<Double> output = this.activate(input, true);
+            this.propagate(currentRate, momentum, update, Utils.toList(target));
+            errorSum += cost.run(target, output);
+        }
+        return errorSum / trainSet.length;
+    }
+
+    public String toJSON() {
+        return "";
+    }
+
+    public void set(final Double biasValue, final Activation squashValue) {
+        for (final Node node : this.nodes) {
+            node.bias = biasValue == null ? node.bias : biasValue;
+            node.squash = squashValue == null ? node.squash : squashValue;
+        }
+    }
+
+    public double evolve(final DataSet[] set, final TrainingOptions options) {
+        if (set[0].input.length != this.input || set[0].output.length != this.output) {
+            throw new RuntimeException("Dataset input/output size should be same as network input/output size!");
+        }
+
+        double targetError = options.getTargetError(0.05);
+        final double growth = options.getGrowth(0.0001);
+        final Cost cost = options.getCost(Cost.MSE);
+        final int amount = options.getAmount(1);
+
+        if (options.iterations == null && options.error == null) {
+            throw new RuntimeException("At least one of the following options must be specified: error, iterations");
+        } else if (options.error == null) {
+            targetError = -1;
+        } else if (options.iterations == null) {
+            options.iterations = 0;
+        }
+
+
+        options.network = this;
+        final NEAT neat = new NEAT(this.input, this.output, options);
+
+        double error = Integer.MIN_VALUE;
+        double bestFitness = Integer.MIN_VALUE;
+        Network bestGenome = null;
+
+        while (error < -targetError && (options.iterations == 0 | neat.getGeneration() < options.iterations)) {
+            final Network fittest = neat.evolve();
+            final double fitness = fittest.score;
+            error = fitness + (fittest.nodes.size() - fittest.input - fittest.output + fittest.connections.size() + fittest.gates.size()) * growth;
+            if (fitness > bestFitness) {
+                bestFitness = fitness;
+                bestGenome = fittest;
+            }
+            System.out.println("Iteration: " + neat.getGeneration() + "; Fitness: " + fitness + "; Error: " + -error);
+            if (options.schedule && neat.getGeneration() % options.scheduleIterations == 0) {
+                options.scheduleFitness = fitness;
+                options.scheduleError = -error;
+                options.scheduleIteration = neat.getGeneration();
+            }
+        }
+
+        if (bestGenome != null) {
+            this.nodes = bestGenome.nodes;
+            this.connections = bestGenome.connections;
+            this.selfConnections = bestGenome.selfConnections;
+            this.gates = bestGenome.gates;
+            if (options.clear) {
+                this.clear();
+            }
+        }
+        return -error;
+    }
+
 }

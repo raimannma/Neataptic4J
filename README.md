@@ -1,5 +1,5 @@
 # Neataptic4J
-Rewritten version neataptic in Java
+Rewritten version of neataptic in Java
 
 There might be some bugs right now!
 I will integrate some tests and hopefully I can fix all bugs.

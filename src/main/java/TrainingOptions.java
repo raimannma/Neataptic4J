@@ -168,4 +168,120 @@ public class TrainingOptions {
     public int getGates(final int defaultValue) {
         return this.gates == null ? defaultValue : this.gates;
     }
+
+    public void setError(final Character error) {
+        this.error = error;
+    }
+
+    public void setCrossValidate(final boolean crossValidate) {
+        this.crossValidate = crossValidate;
+    }
+
+    public void setCrossValidateTestSize(final int crossValidateTestSize) {
+        this.crossValidateTestSize = crossValidateTestSize;
+    }
+
+    public void setCrossValidateTestError(final double crossValidateTestError) {
+        this.crossValidateTestError = crossValidateTestError;
+    }
+
+    public void setClear(final Boolean clear) {
+        this.clear = clear;
+    }
+
+    public void setShuffle(final boolean shuffle) {
+        this.shuffle = shuffle;
+    }
+
+    public void setSchedule(final boolean schedule) {
+        this.schedule = schedule;
+    }
+
+    public void setScheduleIterations(final int scheduleIterations) {
+        this.scheduleIterations = scheduleIterations;
+    }
+
+    public void setScheduleIteration(final int scheduleIteration) {
+        this.scheduleIteration = scheduleIteration;
+    }
+
+    public void setScheduleError(final double scheduleError) {
+        this.scheduleError = scheduleError;
+    }
+
+    public void setNetwork(final Network network) {
+        this.network = network;
+    }
+
+    public void setScheduleFitness(final double scheduleFitness) {
+        this.scheduleFitness = scheduleFitness;
+    }
+
+    public void setWithNetwork(final Boolean withNetwork) {
+        this.withNetwork = withNetwork;
+    }
+
+    public void setGrowth(final Double growth) {
+        this.growth = growth;
+    }
+
+    public void setAmount(final Integer amount) {
+        this.amount = amount;
+    }
+
+    public void setEqual(final Boolean equal) {
+        this.equal = equal;
+    }
+
+    public void setPopSize(final Integer popSize) {
+        this.popSize = popSize;
+    }
+
+    public void setElitism(final Integer elitism) {
+        this.elitism = elitism;
+    }
+
+    public void setProvinance(final Double provinance) {
+        this.provinance = provinance;
+    }
+
+    public void setMutationRate(final Double mutationRate) {
+        this.mutationRate = mutationRate;
+    }
+
+    public void setMutationAmount(final Integer mutationAmount) {
+        this.mutationAmount = mutationAmount;
+    }
+
+    public void setFitnessPopulation(final Boolean fitnessPopulation) {
+        this.fitnessPopulation = fitnessPopulation;
+    }
+
+    public void setSelection(final Selection selection) {
+        this.selection = selection;
+    }
+
+    public void setCrossover(final Crossover[] crossover) {
+        this.crossover = crossover;
+    }
+
+    public void setMutation(final Mutation[] mutation) {
+        this.mutation = mutation;
+    }
+
+    public void setConnections(final Integer connections) {
+        this.connections = connections;
+    }
+
+    public void setBackConnections(final Integer backConnections) {
+        this.backConnections = backConnections;
+    }
+
+    public void setSelfConnections(final Integer selfConnections) {
+        this.selfConnections = selfConnections;
+    }
+
+    public void setGates(final Integer gates) {
+        this.gates = gates;
+    }
 }

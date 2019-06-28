@@ -1,11 +1,13 @@
+import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
 public abstract class Layer extends NodeGroup {
     private final ConnectionHistory connections;
     ArrayList<NodeGroup> nodes;
+    @Nullable
     NodeGroup output;
 
     public Layer(final int size) {
@@ -18,28 +20,16 @@ public abstract class Layer extends NodeGroup {
     @Override
     public ArrayList<Double> activate(final double[] value) {
         final ArrayList<Double> values = new ArrayList<>();
-
-        for (final NodeGroup node : this.nodes) {
-            final Collection<Double> activation;
-            if (value == null) {
-                activation = node.activate(null);
-            } else {
-                activation = node.activate(value);
-            }
-
-            values.addAll(activation);
-        }
+        this.nodes.stream()
+                .map(node -> node.activate(value))
+                .forEach(values::addAll);
         return values;
     }
 
     @Override
     public void propagate(final double rate, final double momentum, final double[] target) {
         for (int i = this.nodes.size() - 1; i >= 0; i--) {
-            if (target == null) {
-                this.nodes.get(i).propagate(rate, momentum, null);
-            } else {
-                this.nodes.get(i).propagate(rate, momentum, target);
-            }
+            this.nodes.get(i).propagate(rate, momentum, target);
         }
     }
 

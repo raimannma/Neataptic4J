@@ -1,5 +1,5 @@
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class Memory extends Layer {
 
@@ -16,24 +16,26 @@ public class Memory extends Layer {
             if (this.previous != null) {
                 this.previous.connect(block, Connection.Method.ONE_TO_ONE, null);
             }
-            this.nodes.addAll(block.nodes);
+            this.nodes.add(block);
             this.previous = block;
         }
         Collections.reverse(this.nodes);
 
         final NodeGroup outputGroup = new NodeGroup(0);
-        outputGroup.nodes = this.nodes;
+        for (final NodeGroup group : this.nodes) {
+            outputGroup.nodes.addAll(group.nodes);
+        }
         this.output = outputGroup;
     }
 
     @Override
-    public ArrayList<Connection> input(final NodeGroup from, Connection.Method method, final double weight) {
+    public List<Connection> input(final NodeGroup from, Connection.Method method, final Double weight) {
         method = method == null ? Connection.Method.ALL_TO_ALL : method;
         return from.connect(this.nodes.get(this.nodes.size() - 1), Connection.Method.ONE_TO_ONE, 1.0);
     }
 
     @Override
-    public ArrayList<Connection> input(final Layer from, final Connection.Method method, final double weight) {
+    public List<Connection> input(final Layer from, final Connection.Method method, final Double weight) {
         return this.input(from.output, method, weight);
     }
 }

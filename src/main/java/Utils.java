@@ -1,10 +1,34 @@
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public enum Utils {
     ;
+
+    static Random random = new Random();
+
+    public static int randInt(final int max) {
+        return Utils.randInt(0, max);
+    }
+
+    public static int randInt(final int min, final int max) {
+        return Utils.randInt((double) min, (double) max);
+    }
+
+    public static int randInt(final double min, final double max) {
+        return (int) Math.floor(Utils.random.nextDouble() * (max - min) + min);
+    }
+
+    public static double randDouble(final double min, final double max) {
+        return Utils.random.nextDouble() * (max - min) + min;
+    }
+
+    public static <T> T getRandomElem(final T[] arr) {
+        return arr[Utils.randInt(arr.length)];
+    }
+
+    public static <T> T getRandomElem(final List<T> arr) {
+        return arr.get(Utils.randInt(arr.size()));
+    }
 
     public static <T> ArrayList<T> toList(final T[] input) {
         final ArrayList<T> out = new ArrayList<>();

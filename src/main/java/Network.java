@@ -226,7 +226,7 @@ public class Network {
             if (connections.size() == 0) {
                 break;
             }
-            final int connectionIndex = (int) Math.floor(Math.random() * connections.size());
+            final int connectionIndex = Utils.randInt(connections.size());
             this.gate(gater, connections.get(connectionIndex));
             connections.remove(connectionIndex);
         }
@@ -244,7 +244,7 @@ public class Network {
 
         switch (method) {
             case ADD_NODE:
-                final Connection connection = this.connections.get((int) Math.floor(Math.random() * this.connections.size()));
+                final Connection connection = Utils.getRandomElem(this.connections);
                 final Node gater = connection.gater;
                 this.disconnect(connection.from, connection.to);
                 final int toIndex = this.nodes.indexOf(connection.to);
@@ -256,7 +256,7 @@ public class Network {
                 final Connection newConnection1 = this.connect(connection.from, node).get(0);
                 final Connection newConnection2 = this.connect(node, connection.to).get(0);
                 if (gater != null) {
-                    this.gate(gater, Math.random() >= 0.5 ? newConnection1 : newConnection2);
+                    this.gate(gater, Utils.random.nextBoolean() ? newConnection1 : newConnection2);
                 }
                 break;
             case SUB_NODE:
@@ -295,7 +295,7 @@ public class Network {
                 if (possible.size() == 0) {
                     throw new RuntimeException("No connections to remove!");
                 }
-                final Connection randomConn = possible.get((int) Math.floor(Math.random() * possible.size()));
+                final Connection randomConn = Utils.getRandomElem(possible);
                 this.disconnect(randomConn.from, randomConn.to);
                 break;
             case MOD_WEIGHT:
@@ -303,11 +303,11 @@ public class Network {
                 allConnections.addAll(this.selfConnections);
 
                 final Connection conn = allConnections.get((int) Math.floor(Math.random() * allConnections.size()));
-                final double modification = Math.random() * (method.max() - method.min()) + method.min();
+                final double modification = Utils.randDouble(method.min(), method.max());
                 conn.weight += modification;
                 break;
             case MOD_BIAS:
-                final int index1 = (int) Math.floor(Math.random() * (this.nodes.size() - this.input) + this.input);
+                final int index1 = Utils.randInt(this.input, this.nodes.size());
                 this.nodes.get(index1).mutate(method);
                 break;
             case MOD_ACTIVATION:

@@ -23,10 +23,16 @@ public enum Utils {
     }
 
     public static <T> T getRandomElem(final T[] arr) {
+        if (arr.length == 0) {
+            return null;
+        }
         return arr[Utils.randInt(arr.length)];
     }
 
     public static <T> T getRandomElem(final List<T> arr) {
+        if (arr.size() == 0) {
+            return null;
+        }
         return arr.get(Utils.randInt(arr.size()));
     }
 

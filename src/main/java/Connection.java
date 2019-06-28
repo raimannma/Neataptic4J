@@ -2,9 +2,11 @@ import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 public class Connection {
-    public final Node to;
+    public Node to;
     public double gain;
     public double weight;
     public Node from;
@@ -39,15 +41,18 @@ public class Connection {
         return (int) Math.round(0.5 * (a + b) * (a + b + 1) + b);
     }
 
-    public static Connection fromJSON(final JsonObject json) {
-        final Connection connection = new Connection(null, null, null);
-        connection.weight = json.get("weight").getAsDouble();
-        return connection;
+    public static Connection fromJSON(final JsonObject json, final List<Node> nodes) {
+        return new Connection(
+                Node.fromJSON(json.get("from").getAsJsonObject()),
+                Node.fromJSON(json.get("to").getAsJsonObject()),
+                json.get("weight").getAsDouble());
     }
 
     public JsonObject toJSON() {
         final JsonObject json = new JsonObject();
         json.addProperty("weight", this.weight);
+        json.add("from", this.from.toJSON());
+        json.add("to", this.to.toJSON());
         return json;
     }
 
@@ -63,6 +68,34 @@ public class Connection {
         copy.previousDeltaWeight = this.previousDeltaWeight;
         copy.totalDeltaWeight = this.totalDeltaWeight;
         return copy;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || this.getClass() != o.getClass()) {
+            return false;
+        }
+        final Connection that = (Connection) o;
+        return Double.compare(that.weight, this.weight) == 0 &&
+                Objects.equals(this.to, that.to) &&
+                Objects.equals(this.from, that.from);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.to, this.weight, this.from);
+    }
+
+    @Override
+    public String toString() {
+        return "Connection{" +
+                "to=" + this.to +
+                ", weight=" + this.weight +
+                ", from=" + this.from +
+                '}';
     }
 
     public enum Method {

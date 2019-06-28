@@ -2,6 +2,8 @@ import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.IntStream;
 
 public class Node {
     final ConnectionHistory connections;
@@ -49,6 +51,7 @@ public class Node {
         node.bias = json.get("bias").getAsDouble();
         node.type = NodeType.valueOf(json.get("type").getAsString());
         node.mask = json.get("mask").getAsDouble();
+        node.index = json.get("index").getAsInt();
         node.squash = Activation.valueOf(json.get("squash").getAsString());
         return node;
     }
@@ -215,7 +218,7 @@ public class Node {
 
     public List<Connection> connect(final Node target, final Double weight) {
         final List<Connection> connections = new ArrayList<>();
-        if (target.equals(this)) {
+        if (target == this) {
             if (this.connections.self.weight != 0) {
                 throw new RuntimeException("This connection already exists!");
             } else {
@@ -329,15 +332,9 @@ public class Node {
     }
 
     public boolean isProjectingTo(final Node node) {
-        if (node.equals(this) && this.connections.self.weight != 0) {
-            return true;
-        }
-        for (int i = 0; i < this.connections.out.size(); i++) {
-            if (this.connections.out.get(i).to.equals(node)) {
-                return true;
-            }
-        }
-        return false;
+        return node == this && this.connections.self.weight != 0 ||
+                IntStream.range(0, this.connections.out.size())
+                        .anyMatch(i -> this.connections.out.get(i).to == node);
     }
 
     public boolean isProjectedBy(final Node node) {
@@ -358,6 +355,7 @@ public class Node {
         object.addProperty("type", this.type.name());
         object.addProperty("squash", this.squash.name());
         object.addProperty("mask", this.mask);
+        object.addProperty("index", this.index);
         return object;
     }
 
@@ -375,5 +373,26 @@ public class Node {
 
     public Node copy() {
         return Node.fromJSON(this.toJSON());
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || this.getClass() != o.getClass()) {
+            return false;
+        }
+        final Node node = (Node) o;
+        return this.index == node.index &&
+                Double.compare(node.mask, this.mask) == 0 &&
+                Double.compare(node.bias, this.bias) == 0 &&
+                this.type == node.type &&
+                this.squash == node.squash;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.index, this.type, this.mask, this.squash, this.bias);
     }
 }

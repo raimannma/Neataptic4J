@@ -1,5 +1,5 @@
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,8 +31,7 @@ public class Network {
         this.dropout = 0;
 
         for (int i = 0; i < input + output; i++) {
-            final NodeType type = i < input ? NodeType.INPUT : NodeType.OUTPUT;
-            this.nodes.add(new Node(type));
+            this.nodes.add(new Node(i < input ? NodeType.INPUT : NodeType.OUTPUT));
         }
         for (int i = 0; i < input; i++) {
             for (int j = 0; j < output + input; j++) {
@@ -42,9 +41,6 @@ public class Network {
         }
     }
 
-    public static Network fromJSON(final String json) {
-        return new Gson().fromJson(json, Network.class);
-    }
 
     public static Network merge(final Network network1, final Network network2) {
         if (network1.output != network2.output) {
@@ -74,6 +70,30 @@ public class Network {
                 .filter(i -> list.get(i) != null)
                 .boxed()
                 .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    public static Network fromJSON(final JsonObject json) {
+        final Network network = new Network(0, 0);
+        network.input = json.get("input").getAsInt();
+        network.output = json.get("output").getAsInt();
+        network.dropout = json.get("dropout").getAsInt();
+        final JsonArray nodes = json.get("nodes").getAsJsonArray();
+        for (int i = 0; i < nodes.size(); i++) {
+            network.nodes.add(Node.fromJSON(nodes.get(i).getAsJsonObject()));
+        }
+        final JsonArray connections = json.get("connections").getAsJsonArray();
+        for (int i = 0; i < connections.size(); i++) {
+            network.connections.add(Connection.fromJSON(connections.get(i).getAsJsonObject(), network.nodes));
+        }
+        final JsonArray gates = json.get("gates").getAsJsonArray();
+        for (int i = 0; i < gates.size(); i++) {
+            network.gates.add(Connection.fromJSON(gates.get(i).getAsJsonObject(), network.nodes));
+        }
+        final JsonArray selfConnections = json.get("selfConnections").getAsJsonArray();
+        for (int i = 0; i < selfConnections.size(); i++) {
+            network.selfConnections.add(Connection.fromJSON(selfConnections.get(i).getAsJsonObject(), network.nodes));
+        }
+        return network;
     }
 
     public List<Double> activate(final List<Double> input, final boolean training) {
@@ -137,7 +157,8 @@ public class Network {
 
     public List<Connection> connect(final Node from, final Node to, final Double weight) {
         final List<Connection> connections = from.connect(to, weight);
-        for (int i = 0; i < connections.size(); i++) {
+        final int bound = connections.size();
+        for (int i = 0; i < bound; i++) {
             if (!from.equals(to)) {
                 connections.add(connections.get(i));
             } else {
@@ -245,6 +266,9 @@ public class Network {
         switch (method) {
             case ADD_NODE:
                 final Connection connection = Utils.getRandomElem(this.connections);
+                if (connection == null) {
+                    throw new RuntimeException("No node can be added!");
+                }
                 final Node gater = connection.gater;
                 this.disconnect(connection.from, connection.to);
                 final int toIndex = this.nodes.indexOf(connection.to);
@@ -514,7 +538,7 @@ public class Network {
         return error;
     }
 
-    protected double test(final DataSet[] testSet, Cost cost) {
+    double test(final DataSet[] testSet, Cost cost) {
         if (cost == null) {
             cost = Cost.MSE;
         }
@@ -549,9 +573,28 @@ public class Network {
         return errorSum / trainSet.length;
     }
 
-    public String toJSON() {
-        final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        return gson.toJson(this);
+    public JsonObject toJSON() {
+        final JsonArray jsonNodes = new JsonArray();
+        final JsonArray jsonConnections = new JsonArray();
+        final JsonArray jsonGates = new JsonArray();
+        final JsonArray jsonSelfConnections = new JsonArray();
+
+        IntStream.range(0, this.nodes.size()).forEach(i -> this.nodes.get(i).index = i);
+
+        this.nodes.stream().map(Node::toJSON).forEach(jsonNodes::add);
+        this.connections.stream().map(Connection::toJSON).forEach(jsonConnections::add);
+        this.gates.stream().map(Connection::toJSON).forEach(jsonGates::add);
+        this.selfConnections.stream().map(Connection::toJSON).forEach(jsonSelfConnections::add);
+
+        final JsonObject object = new JsonObject();
+        object.addProperty("input", this.input);
+        object.addProperty("output", this.output);
+        object.addProperty("dropout", this.dropout);
+        object.add("nodes", jsonNodes);
+        object.add("connections", jsonConnections);
+        object.add("gates", jsonGates);
+        object.add("selfConnections", jsonSelfConnections);
+        return object;
     }
 
     public void set(final Double biasValue, final Activation squashValue) {

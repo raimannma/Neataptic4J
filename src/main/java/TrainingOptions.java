@@ -1,6 +1,6 @@
 public class TrainingOptions {
     public Integer iterations;
-    public Character error;
+    public double error;
     public boolean crossValidate;
     public int crossValidateTestSize;
     public double crossValidateTestError;

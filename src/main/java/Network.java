@@ -466,9 +466,9 @@ public class Network {
 
         if (batchSize > set.length) {
             throw new RuntimeException("Batch size must be smaller or equal to dataset length!");
-        } else if (options.iterations == null && options.error == null) {
+        } else if (options.iterations == null && options.error == -1) {
             throw new RuntimeException("At least one of the following options must be specified: error, iterations");
-        } else if (options.error == null) {
+        } else if (options.error == -1) {
             targetError = -1; // run until iterations
         } else if (options.iterations == null) {
             options.iterations = 0; // run until target error
@@ -614,9 +614,9 @@ public class Network {
         final Cost cost = options.getCost(Cost.MSE);
         final int amount = options.getAmount(1);
 
-        if (options.iterations == null && options.error == null) {
+        if (options.iterations == null && options.error == -1) {
             throw new RuntimeException("At least one of the following options must be specified: error, iterations");
-        } else if (options.error == null) {
+        } else if (options.error == -1) {
             targetError = -1;
         } else if (options.iterations == null) {
             options.iterations = 0;

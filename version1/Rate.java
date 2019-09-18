@@ -1,3 +1,5 @@
+package version1;
+
 public enum Rate {
     FIXED {
         @Override

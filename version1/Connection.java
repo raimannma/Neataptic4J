@@ -1,3 +1,5 @@
+package version1;
+
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;
 
@@ -91,7 +93,7 @@ public class Connection {
 
     @Override
     public String toString() {
-        return "Connection{" +
+        return "version1.Connection{" +
                 "to=" + this.to +
                 ", weight=" + this.weight +
                 ", from=" + this.from +

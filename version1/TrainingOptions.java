@@ -1,3 +1,5 @@
+package version1;
+
 public class TrainingOptions {
     public Integer iterations;
     public double error = -1;

@@ -1,3 +1,5 @@
+package version1;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
@@ -517,7 +519,7 @@ public class Network {
                 }
                 set = newSet;
             }
-            System.out.println("Iteration: " + iteration + "; Error: " + error + "; Rate: " + currentRate);
+            System.out.println("Iteration: " + iteration + "; Error: " + error + "; version1.Rate: " + currentRate);
 
             if (options.schedule && iteration % options.scheduleIterations == 0) {
                 options.scheduleError = error;

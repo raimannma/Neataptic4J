@@ -1,3 +1,5 @@
+package architecture;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import methods.Activation;
@@ -10,18 +12,17 @@ import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static Node.NodeType.*;
 import static methods.MutationType.MOD_ACTIVATION;
 import static methods.MutationType.SUB_NODE;
 
 class Network {
-    private final int output;
-    private final int input;
-    ArrayList<Connection> gates;
+    int input;
+    int output;
+    List<Connection> gates;
     double score;
-    ArrayList<Node> nodes;
-    ArrayList<Connection> connections;
-    private ArrayList<Connection> selfConns;
+    List<Node> nodes;
+    List<Connection> connections;
+    List<Connection> selfConns;
     private double dropout;
 
     Network(final int input, final int output) {
@@ -37,7 +38,7 @@ class Network {
 
         this.dropout = 0;
         IntStream.range(0, this.input + this.output)
-                .mapToObj(i -> new Node(i < input ? Node.NodeType.INPUT : OUTPUT))
+                .mapToObj(i -> new Node(i < input ? Node.NodeType.INPUT : Node.NodeType.OUTPUT))
                 .forEach(this.nodes::add);
         for (int i = 0; i < this.input; i++) {
             for (int j = this.input; j < this.output + this.input; j++) {
@@ -70,7 +71,7 @@ class Network {
 
         for (int i = 0; i < network2.connections.size(); i++) {
             final Connection conn = network2.connections.get(i);
-            if (conn.from.type == INPUT) {
+            if (conn.from.type == Node.NodeType.INPUT) {
                 final int index = network2.nodes.indexOf(conn.from);
                 conn.from = network1.nodes.get(network1.nodes.size() - 1 - index);
             }
@@ -79,7 +80,7 @@ class Network {
             network2.nodes.subList(0, network2.input).clear();
         }
         for (int i = network1.nodes.size() - network1.output; i < network1.nodes.size(); i++) {
-            network1.nodes.get(i).type = HIDDEN;
+            network1.nodes.get(i).type = Node.NodeType.HIDDEN;
         }
 
         network1.connections.addAll(network2.connections);
@@ -95,17 +96,19 @@ class Network {
 
         final JsonArray nodes = json.get("nodes").getAsJsonArray();
         final JsonArray connections = json.get("connections").getAsJsonArray();
-
-        IntStream.range(0, nodes.size())
-                .forEach(i -> network.nodes.add(Node.fromJSON(nodes.get(i).getAsJsonObject())));
-
+        for (int i = 0; i < nodes.size(); i++) {
+            network.nodes.add(Node.fromJSON(nodes.get(i).getAsJsonObject()));
+        }
+        if (network.nodes.isEmpty()) {
+            System.err.println("No Node added");
+        }
         for (int i = 0; i < connections.size(); i++) {
             final JsonObject connJSON = connections.get(i).getAsJsonObject();
-            final Connection connection = network.connect(network.nodes.get(connJSON.get("from").getAsInt()), network.nodes.get(connJSON.get("to").getAsInt())).get(0);
-            connection.weight = connJSON.get("weight").getAsDouble();
+            final List<Connection> connection = network.connect(network.nodes.get(connJSON.get("from").getAsInt()), network.nodes.get(connJSON.get("to").getAsInt()));
+            connection.get(0).weight = connJSON.get("weight").getAsDouble();
 
-            if (connJSON.get("gater").getAsInt() != -1) {
-                network.gate(network.nodes.get(connJSON.get("gater").getAsInt()), connection);
+            if (connJSON.has("gater") && connJSON.get("gater").getAsInt() != -1) {
+                network.gate(network.nodes.get(connJSON.get("gater").getAsInt()), connection.get(0));
             }
         }
         return network;
@@ -114,34 +117,37 @@ class Network {
     JsonObject toJSON() {
         final JsonObject json = new JsonObject();
         json.addProperty("input", this.input);
+        json.addProperty("output", this.output);
         json.addProperty("dropout", this.dropout);
-        json.addProperty("hidden", this.output);
         final JsonArray nodes = new JsonArray();
         final JsonArray connections = new JsonArray();
 
-        IntStream.range(0, nodes.size()).forEach(i -> this.nodes.get(i).index = i);
-        for (int i = 0; i < nodes.size(); i++) {
+        IntStream.range(0, this.nodes.size()).forEach(i -> this.nodes.get(i).index = i);
+        for (int i = 0; i < this.nodes.size(); i++) {
             final Node node = this.nodes.get(i);
             final JsonObject nodeJSON = node.toJSON();
             nodeJSON.addProperty("index", i);
+            nodes.add(nodeJSON);
 
             if (node.connections.self.weight != 0) {
-                final JsonObject toJSON = node.connections.self.toJSON();
-                toJSON.addProperty("from", i);
-                toJSON.addProperty("to", i);
+                final JsonObject connectionJSON = node.connections.self.toJSON();
+                connectionJSON.addProperty("from", i);
+                connectionJSON.addProperty("to", i);
 
-                toJSON.addProperty("gater", node.connections.self.gater != null ? node.connections.self.gater.index : -1);
-                connections.add(toJSON);
+                if (node.connections.self.gater == null) {
+                    connectionJSON.addProperty("gater", -1);
+                } else {
+                    connectionJSON.addProperty("gater", node.connections.self.gater.index);
+                }
+                connections.add(connectionJSON);
             }
-
-            nodes.add(nodeJSON);
         }
 
         for (final Connection connection : this.connections) {
             final JsonObject toJSON = connection.toJSON();
             toJSON.addProperty("from", connection.from.index);
             toJSON.addProperty("to", connection.to.index);
-            toJSON.addProperty("gater", connection.gater != null ? connection.gater.index : null);
+            toJSON.addProperty("gater", connection.gater != null ? connection.gater.index : -1);
             connections.add(toJSON);
         }
 
@@ -198,7 +204,7 @@ class Network {
                 final double random = Math.random();
                 node = random >= 0.5 ? network1.nodes.get(i) : network2.nodes.get(i);
                 final Node other = random < 0.5 ? network1.nodes.get(i) : network2.nodes.get(i);
-                if (node == null || node.type == OUTPUT) {
+                if (node == null || node.type == Node.NodeType.OUTPUT) {
                     node = other;
                 }
             } else {
@@ -229,7 +235,7 @@ class Network {
             n1Conns.put(Connection.getInnovationID(connection.from.index, connection.to.index), data);
         }
 
-        for (int i = 0; i < network1.connections.size(); i++) {
+        for (int i = 0; i < network1.selfConns.size(); i++) {
             final Connection connection = network1.selfConns.get(i);
             final JsonObject data = new JsonObject();
             data.addProperty("weight", connection.weight);
@@ -292,6 +298,18 @@ class Network {
             }
         }
         return offspring;
+    }
+
+    @Override
+    public String toString() {
+        return "Network{" +
+                "input=" + this.input +
+                ", output=" + this.output +
+                ", gates=" + this.gates +
+                ", nodes=" + this.nodes +
+                ", connections=" + this.connections +
+                ", selfConns=" + this.selfConns +
+                '}';
     }
 
     private double evolve(final DataEntry[] set) {
@@ -361,17 +379,17 @@ class Network {
         return -error;
     }
 
-    private double test(final List<DataEntry> testSet) {
+    double test(final List<DataEntry> testSet) {
         return this.test(testSet, Cost.MSE);
     }
 
     private double test(final List<DataEntry> set, final Cost cost) {
         if (cost == null) {
-            this.test(set);
+            return this.test(set);
         }
         if (this.dropout != 0) {
             this.nodes.stream()
-                    .filter(node -> node.type == HIDDEN || node.type == CONSTANT)
+                    .filter(node -> node.type == Node.NodeType.HIDDEN || node.type == Node.NodeType.CONSTANT)
                     .forEach(node -> node.mask = 1 - this.dropout);
         }
         double error = 0;
@@ -387,9 +405,9 @@ class Network {
     private double[] noTraceActivate(final double[] input) {
         final List<Double> output = new ArrayList<>();
         for (int i = 0; i < this.nodes.size(); i++) {
-            if (this.nodes.get(i).type == INPUT) {
+            if (this.nodes.get(i).type == Node.NodeType.INPUT) {
                 this.nodes.get(i).noTraceActivation(input[i]);
-            } else if (this.nodes.get(i).type == OUTPUT) {
+            } else if (this.nodes.get(i).type == Node.NodeType.OUTPUT) {
                 output.add(this.nodes.get(i).noTraceActivation());
             } else {
                 this.nodes.get(i).noTraceActivation();
@@ -410,11 +428,11 @@ class Network {
                 this.disconnect(connection.from, connection.to);
 
                 final int toIndex = this.nodes.indexOf(connection.to);
-                final Node node = new Node(HIDDEN);
+                final Node node = new Node(Node.NodeType.HIDDEN);
 
                 node.mutate(MOD_ACTIVATION);
                 final int minBound = Math.min(toIndex, this.nodes.size() - this.output);
-                this.nodes.set(minBound, node);
+                this.nodes.add(minBound, node);
 
                 final Connection newConn1 = this.connect(connection.from, node).get(0);
                 final Connection newConn2 = this.connect(node, connection.to).get(0);
@@ -663,9 +681,10 @@ class Network {
         return this.train(set, new TrainOptions());
     }
 
-    private double train(final DataEntry[] set, final TrainOptions options) {
+    double train(final DataEntry[] set, final TrainOptions options) {
         if (set[0].input.length != this.input || set[0].output.length != this.output) {
-            throw new RuntimeException("Dataset input/output size should be same as network input/output size!");
+            throw new RuntimeException("Dataset input/output size should be same as network input/output size!" + System.lineSeparator() +
+                    set[0].input.length + " - " + this.input + ";" + set[0].output.length + " - " + this.output);
         }
 
         final double targetError = options.getError();
@@ -732,7 +751,7 @@ class Network {
         }
         if (dropout != 0) {
             this.nodes.stream()
-                    .filter(node -> node.type == HIDDEN || node.type == CONSTANT)
+                    .filter(node -> node.type == Node.NodeType.HIDDEN || node.type == Node.NodeType.CONSTANT)
                     .forEach(node -> node.mask = 1 - dropout);
         }
         return error;
@@ -757,24 +776,6 @@ class Network {
         this.nodes.forEach(Node::clear);
     }
 
-    private double[] activate(final double[] input, final boolean training) {
-        final List<Double> output = new ArrayList<>();
-
-        for (int i = 0; i < this.nodes.size(); i++) {
-            if (this.nodes.get(i).type == INPUT) {
-                this.nodes.get(i).activate(input[i]);
-            } else if (this.nodes.get(i).type == OUTPUT) {
-                output.add(this.nodes.get(i).activate());
-            } else {
-                if (training) {
-                    this.nodes.get(i).mask = Math.random() < this.dropout ? 0 : 1;
-                }
-                this.nodes.get(i).activate();
-            }
-        }
-        return output.stream().mapToDouble(i -> i).toArray();
-    }
-
     private void propagate(final double rate, final double momentum, final boolean update, final double[] target) {
         if (target == null || target.length != this.output) {
             throw new RuntimeException("Output target length should match network output length");
@@ -789,4 +790,25 @@ class Network {
         }
     }
 
+    double[] activate(final double[] input) {
+        return this.activate(input, false);
+    }
+
+    double[] activate(final double[] input, final boolean training) {
+        final List<Double> output = new ArrayList<>();
+
+        for (int i = 0; i < this.nodes.size(); i++) {
+            if (this.nodes.get(i).type == Node.NodeType.INPUT) {
+                this.nodes.get(i).activate(input[i]);
+            } else if (this.nodes.get(i).type == Node.NodeType.OUTPUT) {
+                output.add(this.nodes.get(i).activate());
+            } else {
+                if (training) {
+                    this.nodes.get(i).mask = Math.random() < this.dropout ? 0 : 1;
+                }
+                this.nodes.get(i).activate();
+            }
+        }
+        return output.stream().mapToDouble(i -> i).toArray();
+    }
 }

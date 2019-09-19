@@ -1,3 +1,5 @@
+package architecture;
+
 import methods.ConnectionType;
 import methods.GatingType;
 
@@ -80,10 +82,10 @@ public class NodeGroup {
                     if (method == ConnectionType.ALL_TO_ELSE && this.nodes.get(i).equals(target.nodes.get(j))) {
                         continue;
                     }
-                    final Connection connection = this.nodes.get(i).connect(target.nodes.get(j), weight).get(0);
-                    this.connections.out.add(connection);
-                    target.connections.in.add(connection);
-                    connections.add(connection);
+                    final List<Connection> connection = this.nodes.get(i).connect(target.nodes.get(j), weight);
+                    this.connections.out.add(connection.get(0));
+                    target.connections.in.add(connection.get(0));
+                    connections.add(connection.get(0));
                 }
             }
         } else if (method == ConnectionType.ONE_TO_ONE) {

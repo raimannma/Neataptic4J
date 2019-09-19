@@ -1,3 +1,5 @@
+package architecture;
+
 import java.util.ArrayList;
 
 class ConnectionListNode {

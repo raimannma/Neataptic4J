@@ -1,3 +1,5 @@
+package architecture;
+
 import methods.Cost;
 import methods.Rate;
 

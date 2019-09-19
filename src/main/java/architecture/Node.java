@@ -1,3 +1,5 @@
+package architecture;
+
 import com.google.gson.JsonObject;
 import methods.Activation;
 import methods.MutationType;
@@ -5,10 +7,11 @@ import methods.MutationType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static Node.NodeType.CONSTANT;
+import static architecture.Node.NodeType.CONSTANT;
 import static methods.Activation.LOGISTIC;
 
 public class Node {
@@ -87,8 +90,11 @@ public class Node {
                 influences.set(index, influences.get(index) + connection.weight * connection.from.activation);
             } else {
                 nodes.add(node);
-                influences.add(connection.weight * connection.from.activation +
-                        (node.connections.self.gater.equals(this) ? node.old : 0));
+                if (node.connections.self.gater != null && node.connections.self.gater.equals(this)) {
+                    influences.add(connection.weight * connection.from.activation + node.old);
+                } else {
+                    influences.add(connection.weight * connection.from.activation + 0);
+                }
             }
             connection.gain = this.activation;
         }
@@ -98,8 +104,8 @@ public class Node {
             connection.elegibility = this.connections.self.gain * this.connections.self.weight * connection.elegibility + connection.from.activation * connection.gain;
 
             for (int j = 0; j < nodes.size(); j++) {
-                final Node node = nodes.get(i);
-                final double influence = influences.get(i);
+                final Node node = nodes.get(j);
+                final double influence = influences.get(j);
                 final int index = connection.xTraceNodes.indexOf(node);
                 if (index > -1) {
                     connection.xTraceValues.set(index,
@@ -155,7 +161,7 @@ public class Node {
             for (int i = 0; i < this.connections.gated.size(); i++) {
                 final Connection connection = this.connections.gated.get(i);
                 final Node node = connection.to;
-                double influence = node.connections.self.gater.equals(this) ? node.old : 0;
+                double influence = node.connections.self.gater == this ? node.old : 0;
                 influence += connection.weight * connection.from.activation;
                 error += node.errorResponsibility * influence;
             }
@@ -211,9 +217,9 @@ public class Node {
 
     List<Connection> connect(final Node target, final double weight) {
         final List<Connection> connections = new ArrayList<>();
-        if (target.equals(this)) {
+        if (target == this) {
             if (this.connections.self.weight != 0) {
-                throw new RuntimeException("This connection already exists!");
+                System.err.println(("This connection already exists!"));
             } else {
                 this.connections.self.weight = weight;
             }
@@ -230,8 +236,9 @@ public class Node {
     }
 
     boolean isProjectingTo(final Node node) {
-        return node.equals(this) && this.connections.self.weight != 0 ||
-                IntStream.range(0, this.connections.out.size()).anyMatch(i -> this.connections.out.get(i).to.equals(node));
+        return this.equals(node) && this.connections.self.weight != 0 ||
+                IntStream.range(0, this.connections.out.size())
+                        .anyMatch(i -> this.connections.out.get(i).to.equals(node));
     }
 
     private List<Connection> connect(final NodeGroup target, final double weight) {
@@ -336,6 +343,23 @@ public class Node {
         jsonObject.addProperty("squash", this.squash.name());
         jsonObject.addProperty("mask", this.mask);
         return jsonObject;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.squash, this.bias, this.type);
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        return this == o;
+    }
+
+    @Override
+    public String toString() {
+        return "Node{" +
+                "type=" + this.type +
+                '}';
     }
 
     enum NodeType {HIDDEN, INPUT, OUTPUT, CONSTANT}

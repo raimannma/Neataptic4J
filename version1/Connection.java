@@ -9,16 +9,16 @@ import java.util.Objects;
 
 public class Connection {
     public Node to;
-    public double gain;
+    private double gain;
     public double weight;
     public Node from;
     @Nullable
-    public Node gater;
-    public double elegibility;
-    public ArrayList<Double> xTraceValues;
-    public double previousDeltaWeight;
-    public double totalDeltaWeight;
-    ArrayList<Node> xTraceNodes;
+    private Node gater;
+    private double elegibility;
+    private ArrayList<Double> xTraceValues;
+    private double previousDeltaWeight;
+    private double totalDeltaWeight;
+    private ArrayList<Node> xTraceNodes;
 
     public Connection(final Node from, final Node to) {
         this(from, to, Math.random() * 0.2 - 0.1);
@@ -93,7 +93,7 @@ public class Connection {
 
     @Override
     public String toString() {
-        return "version1.Connection{" +
+        return "version1.architecture.Connection{" +
                 "to=" + this.to +
                 ", weight=" + this.weight +
                 ", from=" + this.from +

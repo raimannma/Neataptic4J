@@ -48,7 +48,7 @@ public class Rate {
     }
 
     private static double EXP(final double baserate, final int iteration) {
-        return baserate * Math.pow(0.999, iteration);
+        return baserate * Math.pow(0.9995, iteration);
     }
 
     private static double INV(final double baserate, final int iteration) {

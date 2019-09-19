@@ -1,3 +1,5 @@
+package architecture;
+
 class DataEntry {
     double[] input;
     double[] output;

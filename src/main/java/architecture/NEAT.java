@@ -1,3 +1,5 @@
+package architecture;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import methods.CrossOverType;

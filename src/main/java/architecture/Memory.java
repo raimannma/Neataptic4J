@@ -1,3 +1,5 @@
+package architecture;
+
 import methods.Activation;
 import methods.ConnectionType;
 

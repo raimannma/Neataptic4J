@@ -1,3 +1,5 @@
+package architecture;
+
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
@@ -43,5 +45,14 @@ public class Connection {
         final JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("weight", this.weight);
         return jsonObject;
+    }
+
+    @Override
+    public String toString() {
+        return "Connection{" +
+                "to=" + this.to +
+                ", weight=" + this.weight +
+                ", from=" + this.from +
+                '}';
     }
 }

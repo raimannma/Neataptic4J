@@ -1,3 +1,5 @@
+package architecture;
+
 import methods.ConnectionType;
 
 import java.util.List;

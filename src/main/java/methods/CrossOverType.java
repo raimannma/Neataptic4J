@@ -1,4 +1,4 @@
-package version2.methods;
+package methods;
 
 import org.jetbrains.annotations.Nullable;
 

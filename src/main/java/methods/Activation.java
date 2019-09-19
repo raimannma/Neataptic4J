@@ -1,4 +1,4 @@
-package version2.methods;
+package methods;
 
 public enum Activation {
     LOGISTIC {
@@ -106,6 +106,10 @@ public enum Activation {
             return derivate ? x > 0 ? scale : (fx + alpha) * scale : fx * scale;
         }
     };
+
+    public double calc(final double x) {
+        return this.calc(x, false);
+    }
 
     public abstract double calc(double x, boolean derivate);
 }

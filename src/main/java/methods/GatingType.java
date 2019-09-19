@@ -1,4 +1,4 @@
-package version2.methods;
+package methods;
 
 public enum GatingType {
     OUTPUT("OUTPUT"),

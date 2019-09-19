@@ -1,6 +1,6 @@
-package version2.methods;
+package methods;
 
-import static version2.methods.Activation.*;
+import static methods.Activation.*;
 
 public enum MutationType {
     ADD_NODE("ADD_NODE"),
@@ -62,11 +62,11 @@ public enum MutationType {
     };
 
     private final String name;
-    private Activation[] allowed;
-    private boolean keepGates;
-    private boolean mutateOutput;
-    private int min;
-    private int max;
+    public Activation[] allowed;
+    public int min;
+    public int max;
+    public boolean keepGates;
+    public boolean mutateOutput;
 
     MutationType(final String name) {
         this.name = name;

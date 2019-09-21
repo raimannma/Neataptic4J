@@ -133,13 +133,14 @@ public class Node {
         }
         this.activation = this.squash.calc(this.state);
 
-        IntStream.range(0, this.connections.in.size()).forEach(i -> this.connections.gated.get(i).gain = this.activation);
+        for (int i = 0; i < this.connections.gated.size(); i++) {
+            this.connections.gated.get(i).gain = this.activation;
+        }
         return this.activation;
     }
 
-    double noTraceActivation(final double input) {
+    void noTraceActivation(final double input) {
         this.activation = input;
-        return this.activation;
     }
 
     void propagate(final double momentum, final boolean update, final double target) {

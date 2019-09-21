@@ -5,7 +5,7 @@ import methods.CrossOverType;
 import methods.MutationType;
 import methods.SelectionType;
 
-class EvolveOptions {
+public class EvolveOptions {
     private boolean fitnessPopulation;
     private int populationSize;
     private int elitism;
@@ -28,7 +28,7 @@ class EvolveOptions {
     private int iterations;
     private Network network;
 
-    EvolveOptions() {
+    public EvolveOptions() {
         this.error = Double.NaN;
         this.growth = 0.0001;
         this.cost = Cost.MSE;
@@ -208,7 +208,7 @@ class EvolveOptions {
         return this.iterations;
     }
 
-    void setIterations(final int iterations) {
+    public void setIterations(final int iterations) {
         this.iterations = iterations;
     }
 

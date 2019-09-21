@@ -11,7 +11,7 @@ public class TrainOptions {
     private double dropout;
     private double momentum;
     private int batchSize;
-    private Rate.RatePolicy ratePolicy;
+    private Rate ratePolicy;
     private Cost cost;
     private int iterations;
     private boolean crossValidate;
@@ -20,14 +20,14 @@ public class TrainOptions {
     private boolean clear;
     private boolean shuffle;
 
-    TrainOptions() {
+    public TrainOptions() {
         this.rate = 0.3;
         this.cost = MSE;
         this.error = 0.05;
         this.dropout = 0;
         this.momentum = 0;
         this.batchSize = 1;
-        this.ratePolicy = Rate.RatePolicy.FIXED;
+        this.ratePolicy = new Rate.FIXED();
         this.iterations = -1;
         this.error = -1;
         this.crossValidate = false;
@@ -75,11 +75,11 @@ public class TrainOptions {
         this.batchSize = batchSize;
     }
 
-    Rate.RatePolicy getRatePolicy() {
+    Rate getRatePolicy() {
         return this.ratePolicy;
     }
 
-    public void setRatePolicy(final Rate.RatePolicy ratePolicy) {
+    public void setRatePolicy(final Rate ratePolicy) {
         this.ratePolicy = ratePolicy;
     }
 

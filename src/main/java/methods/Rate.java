@@ -1,66 +1,86 @@
 package methods;
 
-public class Rate {
-    public static double STEP(final double baseRate, final int iteration, final double gamma, final int stepSize) {
-        return baseRate * Math.pow(gamma, Math.floor((double) iteration / stepSize));
+public abstract class Rate {
+    public Rate() {
+
     }
 
-    public static double STEP(final double baseRate, final int iteration, final int stepSize) {
-        return baseRate * Math.pow(0.9, Math.floor((double) iteration / stepSize));
-    }
+    public abstract double calc(double baseRate, int iterations);
 
-    public static double STEP(final double baseRate, final int iteration, final double gamma) {
-        return baseRate * Math.pow(gamma, Math.floor((double) iteration / 100));
-    }
-
-    public static double EXP(final double baserate, final int iteration, final double gamma) {
-        return baserate * Math.pow(gamma, iteration);
-    }
-
-    public static double INV(final double baserate, final int iteration, final double gamma, final int power) {
-        return baserate * Math.pow(1 + gamma * iteration, -power);
-    }
-
-    public static double INV(final double baserate, final int iteration, final int power) {
-        return baserate * Math.pow(1 + 0.001 * iteration, -power);
-    }
-
-    public static double INV(final double baserate, final int iteration, final double gamma) {
-        return baserate * Math.pow(1 + gamma * iteration, -2);
-    }
-
-    public static double calc(final double baseRate, final int iteration, final RatePolicy ratePolicy) {
-        switch (ratePolicy) {
-            case FIXED:
-                return Rate.FIXED(baseRate);
-            case EXP:
-                return Rate.EXP(baseRate, iteration);
-            case INV:
-                return Rate.INV(baseRate, iteration);
-            case STEP:
-                return Rate.STEP(baseRate, iteration);
+    public static class FIXED extends Rate {
+        @Override
+        public double calc(final double baseRate, final int iterations) {
+            return baseRate;
         }
-        return 0;
     }
 
-    private static double FIXED(final double baserate) {
-        return baserate;
+    public class STEP extends Rate {
+
+        private final int stepSize;
+        private final double gamma;
+
+        public STEP(final int stepSize) {
+            this(stepSize, 0.9);
+        }
+
+        public STEP(final int stepSize, final double gamma) {
+            this.stepSize = stepSize;
+            this.gamma = gamma;
+        }
+
+        public STEP(final double gamma) {
+            this(100, gamma);
+        }
+
+        public STEP() {
+            this(100, 0.9);
+        }
+
+        @Override
+        public double calc(final double baseRate, final int iterations) {
+            return baseRate * Math.pow(this.gamma, Math.floor((double) iterations / this.stepSize));
+        }
     }
 
-    private static double EXP(final double baserate, final int iteration) {
-        return baserate * Math.pow(0.9995, iteration);
+    public class EXP extends Rate {
+
+        private final double gamma;
+
+        public EXP() {
+            this(0.999);
+        }
+
+        public EXP(final double gamma) {
+            this.gamma = gamma;
+        }
+
+        @Override
+        public double calc(final double baseRate, final int iterations) {
+            return baseRate * Math.pow(this.gamma, iterations);
+        }
     }
 
-    private static double INV(final double baserate, final int iteration) {
-        return baserate * Math.pow(1 + 0.001 * iteration, -2);
-    }
+    public class INV extends Rate {
 
-    private static double STEP(final double baseRate, final int iteration) {
-        return baseRate * Math.pow(0.9, Math.floor((double) iteration / 100));
-    }
+        private final double gamma;
+        private final double power;
 
+        public INV() {
+            this(0.001, 2);
+        }
 
-    public enum RatePolicy {
-        FIXED, EXP, INV, STEP
+        public INV(final double gamma, final double power) {
+            this.gamma = gamma;
+            this.power = power;
+        }
+
+        public INV(final double gamma) {
+            this(gamma, 2);
+        }
+
+        @Override
+        public double calc(final double baseRate, final int iterations) {
+            return baseRate * Math.pow(1 + this.gamma * iterations, -this.power);
+        }
     }
 }

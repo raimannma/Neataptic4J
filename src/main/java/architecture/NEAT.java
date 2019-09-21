@@ -82,11 +82,17 @@ class NEAT {
         final Network fittest = Network.fromJSON(this.population.get(0).toJSON());
         fittest.score = this.population.get(0).score;
 
-        final List<Network> elitists = IntStream.range(0, this.elitism).mapToObj(i -> this.population.get(i)).collect(Collectors.toList());
+        final List<Network> elitists = IntStream.range(0, this.elitism)
+                .mapToObj(i -> this.population.get(i))
+                .collect(Collectors.toList());
 
-        final List<Network> newPopulation = IntStream.range(0, this.provenance).mapToObj(i -> Network.fromJSON(this.template.toJSON())).collect(Collectors.toList());
+        final List<Network> newPopulation = IntStream.range(0, this.provenance)
+                .mapToObj(i -> Network.fromJSON(this.template.toJSON()))
+                .collect(Collectors.toList());
 
-        IntStream.range(0, this.popSize - this.elitism - this.provenance).mapToObj(i -> this.getOffspring()).forEach(newPopulation::add);
+        IntStream.range(0, this.popSize - this.elitism - this.provenance)
+                .mapToObj(i -> this.getOffspring())
+                .forEach(newPopulation::add);
 
         this.population = newPopulation;
         this.mutate();
@@ -104,14 +110,18 @@ class NEAT {
             if (this.clear) {
                 this.population.forEach(Network::clear);
             }
-            this.population.forEach(value -> value.score = this.fitness.applyAsDouble(value));
+            this.population
+                    .parallelStream()
+                    .forEach(value -> value.score = this.fitness.applyAsDouble(value));
         } else {
-            this.population.forEach(genome -> {
-                if (this.clear) {
-                    genome.clear();
-                }
-                genome.score = this.fitness.applyAsDouble(genome);
-            });
+            this.population
+                    .parallelStream()
+                    .forEach(genome -> {
+                        if (this.clear) {
+                            genome.clear();
+                        }
+                        genome.score = this.fitness.applyAsDouble(genome);
+                    });
         }
     }
 
@@ -125,6 +135,7 @@ class NEAT {
 
     private void mutate() {
         this.population.stream()
+                .parallel()
                 .filter(network -> Math.random() <= this.mutationRate)
                 .forEach(network -> IntStream.range(0, this.mutationAmount)
                         .forEach(j -> network.mutate(this.selectMutationMethod(network))));

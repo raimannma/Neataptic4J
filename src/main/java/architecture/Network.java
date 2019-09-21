@@ -15,7 +15,7 @@ import java.util.stream.IntStream;
 import static methods.MutationType.MOD_ACTIVATION;
 import static methods.MutationType.SUB_NODE;
 
-class Network {
+public class Network {
     int input;
     int output;
     List<Connection> gates;
@@ -25,7 +25,7 @@ class Network {
     List<Connection> selfConns;
     private double dropout;
 
-    Network(final int input, final int output) {
+    public Network(final int input, final int output) {
         this.input = input;
         this.output = output;
 
@@ -200,10 +200,19 @@ class Network {
 
         for (int i = 0; i < size; i++) {
             Node node;
+            final Node other;
             if (i < size - outputSize) {
                 final double random = Math.random();
-                node = random >= 0.5 ? network1.nodes.get(i) : network2.nodes.get(i);
-                final Node other = random < 0.5 ? network1.nodes.get(i) : network2.nodes.get(i);
+                if (random >= 0.5) {
+                    node = i >= network1.nodes.size() ? null : network1.nodes.get(i);
+                } else {
+                    node = i >= network2.nodes.size() ? null : network2.nodes.get(i);
+                }
+                if (random < 0.5) {
+                    other = i >= network1.nodes.size() ? null : network1.nodes.get(i);
+                } else {
+                    other = i >= network2.nodes.size() ? null : network2.nodes.get(i);
+                }
                 if (node == null || node.type == Node.NodeType.OUTPUT) {
                     node = other;
                 }
@@ -312,11 +321,11 @@ class Network {
                 '}';
     }
 
-    private double evolve(final DataEntry[] set) {
+    public double evolve(final DataEntry[] set) {
         return this.evolve(set, new EvolveOptions());
     }
 
-    private double evolve(final DataEntry[] set, final EvolveOptions options) {
+    public double evolve(final DataEntry[] set, final EvolveOptions options) {
         if (options == null) {
             return this.evolve(set);
         }
@@ -677,11 +686,11 @@ class Network {
         });
     }
 
-    double train(final DataEntry[] set) {
+    public double train(final DataEntry[] set) {
         return this.train(set, new TrainOptions());
     }
 
-    double train(final DataEntry[] set, final TrainOptions options) {
+    public double train(final DataEntry[] set, final TrainOptions options) {
         if (set[0].input.length != this.input || set[0].output.length != this.output) {
             throw new RuntimeException("Dataset input/output size should be same as network input/output size!" + System.lineSeparator() +
                     set[0].input.length + " - " + this.input + ";" + set[0].output.length + " - " + this.output);
@@ -693,7 +702,7 @@ class Network {
         final double dropout = options.getDropout();
         final double momentum = options.getMomentum();
         final int batchSize = options.getBatchSize();
-        final Rate.RatePolicy ratePolicy = options.getRatePolicy();
+        final Rate ratePolicy = options.getRatePolicy();
 
         if (batchSize > set.length) {
             throw new RuntimeException("Batch size must be smaller or equal to dataset length!");
@@ -723,7 +732,7 @@ class Network {
             }
             iteration++;
 
-            currentRate = Rate.calc(baseRate, iteration, ratePolicy);
+            currentRate = ratePolicy.calc(baseRate, iteration);
 
             if (options.isCrossValidate()) {
                 this._trainSet(trainSet, batchSize, currentRate, momentum, cost);
@@ -790,11 +799,11 @@ class Network {
         }
     }
 
-    double[] activate(final double[] input) {
+    public double[] activate(final double[] input) {
         return this.activate(input, false);
     }
 
-    double[] activate(final double[] input, final boolean training) {
+    public double[] activate(final double[] input, final boolean training) {
         final List<Double> output = new ArrayList<>();
 
         for (int i = 0; i < this.nodes.size(); i++) {

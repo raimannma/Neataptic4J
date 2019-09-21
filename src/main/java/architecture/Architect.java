@@ -12,8 +12,8 @@ import java.util.stream.IntStream;
 
 import static methods.GatingType.*;
 
-class Architect {
-    static Network createPerceptron(final int... layers) {
+public class Architect {
+    public static Network createPerceptron(final int... layers) {
         if (layers.length < 3) {
             throw new RuntimeException("You have to specify at least 3 layers");
         }
@@ -30,7 +30,7 @@ class Architect {
         return construct(nodes);
     }
 
-    private static Network construct(final List<Object> list) {
+    public static Network construct(final List<Object> list) {
         final Network network = new Network(0, 0);
 
         List<Node> nodes = new ArrayList<>();
@@ -83,7 +83,7 @@ class Architect {
         return network;
     }
 
-    static Network createRandom(final int input, final int hidden, final int output, final Map<Option, Integer> options) {
+    public static Network createRandom(final int input, final int hidden, final int output, final Map<Option, Integer> options) {
         final int connections = options.getOrDefault(Option.CONNECTIONS, hidden * 2);
         final int backConnections = options.getOrDefault(Option.BACK_CONNECTIONS, 0);
         final int selfConnections = options.getOrDefault(Option.SELF_CONNECTIONS, 0);
@@ -98,7 +98,7 @@ class Architect {
         return network;
     }
 
-    static Network createGRU(final int... layers) {
+    public static Network createGRU(final int... layers) {
         final NodeGroup inputLayer = new NodeGroup(layers[0]);
         final NodeGroup outputLayer = new NodeGroup(layers[layers.length - 1]);
 
@@ -118,7 +118,7 @@ class Architect {
         return construct(nodes);
     }
 
-    static Network createHopfield(final int size) {
+    public static Network createHopfield(final int size) {
         final NodeGroup input = new NodeGroup(size);
         final NodeGroup output = new NodeGroup(size);
 
@@ -133,7 +133,7 @@ class Architect {
         return construct(nodes);
     }
 
-    static Network createNARX(final int inputSize, final int[] hiddenLayers, final int outputSize, final int previousInput, final int previousOutput) {
+    public static Network createNARX(final int inputSize, final int[] hiddenLayers, final int outputSize, final int previousInput, final int previousOutput) {
         final List<Object> nodes = new ArrayList<>();
         final Dense input = new Dense(inputSize);
         final Memory inputMemory = new Memory(inputSize, previousInput);
@@ -167,11 +167,11 @@ class Architect {
         return construct(nodes);
     }
 
-    static Network createLSTM(final int... layers) {
+    public static Network createLSTM(final int... layers) {
         return createLSTM(new HashMap<>(), layers);
     }
 
-    static Network createLSTM(Map<Option, Boolean> options, final int... layers) {
+    public static Network createLSTM(Map<Option, Boolean> options, final int... layers) {
         if (options == null) {
             options = new HashMap<>();
         }

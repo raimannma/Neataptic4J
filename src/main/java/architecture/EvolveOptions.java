@@ -1,7 +1,6 @@
 package architecture;
 
 import methods.Cost;
-import methods.CrossOverType;
 import methods.MutationType;
 import methods.SelectionType;
 
@@ -13,7 +12,6 @@ public class EvolveOptions {
     private double mutationRate;
     private int mutationAmount;
     private SelectionType selection;
-    private CrossOverType[] crossOverTypes;
     private MutationType[] mutationTypes;
     private Network template;
     private int maxNodes;
@@ -42,12 +40,6 @@ public class EvolveOptions {
         this.mutationRate = 0.3;
         this.mutationAmount = 1;
         this.selection = SelectionType.POWER;
-        this.crossOverTypes = new CrossOverType[]{
-                CrossOverType.SINGLE_POINT,
-                CrossOverType.TWO_POINT,
-                CrossOverType.UNIFORM,
-                CrossOverType.AVERAGE
-        };
         this.mutationTypes = MutationType.FFW;
         this.template = null;
         this.maxNodes = Integer.MAX_VALUE;
@@ -110,14 +102,6 @@ public class EvolveOptions {
 
     public void setSelection(final SelectionType selection) {
         this.selection = selection;
-    }
-
-    CrossOverType[] getCrossOverTypes() {
-        return this.crossOverTypes;
-    }
-
-    public void setCrossOverTypes(final CrossOverType[] crossOverTypes) {
-        this.crossOverTypes = crossOverTypes;
     }
 
     MutationType[] getMutationTypes() {

@@ -2,7 +2,6 @@ package architecture;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import methods.CrossOverType;
 import methods.MutationType;
 import methods.SelectionType;
 
@@ -28,7 +27,6 @@ class NEAT {
     private final int maxNodes;
     private final Network template;
     private final MutationType[] mutation;
-    private final CrossOverType[] crossOver;
     private final SelectionType selection;
     int generation;
     private int popSize;
@@ -51,7 +49,6 @@ class NEAT {
         this.fitnessPopulation = options.isFitnessPopulation();
 
         this.selection = options.getSelection();
-        this.crossOver = options.getCrossOverTypes();
         this.mutation = options.getMutationTypes();
 
         this.template = options.getTemplate();
@@ -191,19 +188,13 @@ class NEAT {
     private MutationType selectMutationMethod(final Network genome) {
         final MutationType mutationMethod = this.mutation[(int) Math.floor(Math.random() * this.mutation.length)];
 
-        if (mutationMethod == MutationType.ADD_NODE && genome.nodes.size() >= this.maxNodes) {
-            System.err.println("MaxNodes exceeded!");
+        if (mutationMethod == MutationType.ADD_NODE && genome.nodes.size() >= this.maxNodes ||
+                mutationMethod == MutationType.ADD_CONN && genome.connections.size() >= this.maxConns ||
+                mutationMethod == MutationType.ADD_GATE && genome.gates.size() >= this.maxGates) {
             return null;
+        } else {
+            return mutationMethod;
         }
-        if (mutationMethod == MutationType.ADD_CONN && genome.connections.size() >= this.maxConns) {
-            System.err.println("MaxConns exceeded!");
-            return null;
-        }
-        if (mutationMethod == MutationType.ADD_GATE && genome.gates.size() >= this.maxGates) {
-            System.err.println("MaxGates exceeded!");
-            return null;
-        }
-        return mutationMethod;
     }
 
     Network getFittest() {

@@ -219,9 +219,7 @@ public class Node {
     List<Connection> connect(final Node target, final double weight) {
         final List<Connection> connections = new ArrayList<>();
         if (target == this) {
-            if (this.connections.self.weight != 0) {
-                System.err.println(("This connection already exists!"));
-            } else {
+            if (this.connections.self.weight == 0) {
                 this.connections.self.weight = weight;
             }
             connections.add(this.connections.self);

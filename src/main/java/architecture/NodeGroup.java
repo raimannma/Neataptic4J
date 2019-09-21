@@ -68,13 +68,7 @@ public class NodeGroup {
     List<Connection> connect(final NodeGroup target, ConnectionType method, final double weight) {
         final List<Connection> connections = new ArrayList<>();
         if (method == null) {
-            if (!this.equals(target)) {
-                System.err.println("No group connection specified, using ALL_TO_ALL");
-                method = ConnectionType.ALL_TO_ALL;
-            } else {
-                System.err.println("No group connection specified, using ONE_TO_ONE");
-                method = ConnectionType.ONE_TO_ONE;
-            }
+            method = this.equals(target) ? ConnectionType.ONE_TO_ONE : ConnectionType.ALL_TO_ALL;
         }
         if (method == ConnectionType.ALL_TO_ALL || method == ConnectionType.ALL_TO_ELSE) {
             for (int i = 0; i < this.nodes.size(); i++) {

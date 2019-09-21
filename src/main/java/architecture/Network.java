@@ -99,9 +99,6 @@ public class Network {
         for (int i = 0; i < nodes.size(); i++) {
             network.nodes.add(Node.fromJSON(nodes.get(i).getAsJsonObject()));
         }
-        if (network.nodes.isEmpty()) {
-            System.err.println("No Node added");
-        }
         for (int i = 0; i < connections.size(); i++) {
             final JsonObject connJSON = connections.get(i).getAsJsonObject();
             final List<Connection> connection = network.connect(network.nodes.get(connJSON.get("from").getAsInt()), network.nodes.get(connJSON.get("to").getAsInt()));
@@ -164,7 +161,6 @@ public class Network {
         if (this.nodes.indexOf(node) == -1) {
             throw new RuntimeException("This node is not part of the network!");
         } else if (connection.gater != null) {
-            System.err.println("This connection is already gated!");
             return;
         }
         node.gate(connection);
@@ -452,7 +448,6 @@ public class Network {
                 break;
             case SUB_NODE:
                 if (this.nodes.size() == this.input + this.output) {
-                    System.err.println("No more nodes left to remove!");
                     break;
                 }
 
@@ -471,7 +466,6 @@ public class Network {
                                     .forEach(available::add);
                         });
                 if (available.size() == 0) {
-                    System.err.println("No more connections to be made!");
                     break;
                 }
                 final Node[] pair = available.get((int) Math.floor(Math.random() * available.size()));
@@ -486,7 +480,6 @@ public class Network {
                     }
                 }
                 if (possible.size() == 0) {
-                    System.err.println("No connections to remove!");
                     break;
                 }
                 final Connection randomConn = possible.get((int) Math.floor(Math.random() * possible.size()));
@@ -506,7 +499,7 @@ public class Network {
                 break;
             case MOD_ACTIVATION:
                 if (!method.mutateOutput && this.input + this.output == this.nodes.size()) {
-                    System.err.println("No nodes that allow mutation of activation function");
+                    break;
                 }
                 final int ix = (int) Math.floor(Math.random() * (this.nodes.size() - (method.mutateOutput ? 0 : this.output) - this.input) + this.input);
                 this.nodes.get(ix).mutate(method);
@@ -514,7 +507,6 @@ public class Network {
             case ADD_SELF_CONN:
                 final List<Node> poss = IntStream.range(this.input, this.nodes.size()).mapToObj(this.nodes::get).filter(node1 -> node1.connections.self.weight == 0).collect(Collectors.toList());
                 if (poss.size() == 0) {
-                    System.err.println("No more self-connections to add!");
                     break;
                 }
                 final Node node1 = poss.get((int) Math.floor(Math.random() * poss.size()));
@@ -522,7 +514,6 @@ public class Network {
                 break;
             case SUB_SELF_CONN:
                 if (this.selfConns.size() == 0) {
-                    System.err.println("No more self-connections to remove!");
                     break;
                 }
                 final Connection connection2 = this.selfConns.get((int) Math.floor(Math.random() * this.selfConns.size()));
@@ -534,7 +525,6 @@ public class Network {
 
                 final List<Connection> possible1 = allConnections1.stream().filter(connection3 -> connection3.gater == null).collect(Collectors.toList());
                 if (possible1.size() == 0) {
-                    System.err.println("No more connections to gate!");
                     break;
                 }
 
@@ -543,7 +533,6 @@ public class Network {
                 break;
             case SUB_GATE:
                 if (this.gates.size() == 0) {
-                    System.err.println("No more connections to ungate!");
                     break;
                 }
                 final int index3 = (int) Math.floor(Math.random() * this.gates.size());
@@ -562,7 +551,6 @@ public class Network {
                         });
 
                 if (available1.size() == 0) {
-                    System.err.println("No more connections to be made!");
                     break;
                 }
 
@@ -574,7 +562,6 @@ public class Network {
                         connection3.to.connections.in.size() > 1 &&
                         this.nodes.indexOf(connection3.from) > this.nodes.indexOf(connection3.to)).collect(Collectors.toList());
                 if (possible2.size() == 0) {
-                    System.err.println("No connections to remove!");
                     break;
                 }
                 final Connection randomConn1 = possible2.get((int) Math.floor(Math.random() * possible2.size()));
@@ -583,7 +570,6 @@ public class Network {
             case SWAP_NODES:
                 if ((method.mutateOutput && this.nodes.size() - this.input < 2) ||
                         (!method.mutateOutput && this.nodes.size() - this.input - this.output < 2)) {
-                    System.err.println("No nodes that allow swapping of bias and activation function");
                     break;
                 }
                 int index4 = (int) Math.floor(Math.random() * (this.nodes.size() - (method.mutateOutput ? 0 : this.output) - this.input) + this.input);

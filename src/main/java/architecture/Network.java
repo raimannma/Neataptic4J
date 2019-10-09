@@ -199,25 +199,22 @@ public class Network {
             final Node other;
             if (i < size - outputSize) {
                 final double random = Math.random();
-                if (random >= 0.5) {
-                    node = i >= network1.nodes.size() ? null : network1.nodes.get(i);
-                } else {
-                    node = i >= network2.nodes.size() ? null : network2.nodes.get(i);
-                }
-                if (random < 0.5) {
-                    other = i >= network1.nodes.size() ? null : network1.nodes.get(i);
-                } else {
-                    other = i >= network2.nodes.size() ? null : network2.nodes.get(i);
-                }
+                node = random >= 0.5 ?
+                        i >= network1.nodes.size() ? null : network1.nodes.get(i) :
+                        i >= network2.nodes.size() ? null : network2.nodes.get(i);
+                other = random < 0.5 ?
+                        i >= network1.nodes.size() ? null : network1.nodes.get(i) :
+                        i >= network2.nodes.size() ? null : network2.nodes.get(i);
                 if (node == null || node.type == Node.NodeType.OUTPUT) {
                     node = other;
+                    if (other == null) {
+                        throw new RuntimeException();
+                    }
                 }
             } else {
-                if (Math.random() >= 0.5) {
-                    node = network1.nodes.get(network1.nodes.size() + i - size);
-                } else {
-                    node = network2.nodes.get(network2.nodes.size() + i - size);
-                }
+                node = Math.random() >= 0.5 ?
+                        network1.nodes.get(network1.nodes.size() + i - size) :
+                        network2.nodes.get(network2.nodes.size() + i - size);
             }
 
             final Node newNode = new Node();
@@ -230,44 +227,8 @@ public class Network {
         final Map<Integer, JsonObject> n1Conns = new HashMap<>();
         final Map<Integer, JsonObject> n2Conns = new HashMap<>();
 
-        for (int i = 0; i < network1.connections.size(); i++) {
-            final Connection connection = network1.connections.get(i);
-            final JsonObject data = new JsonObject();
-            data.addProperty("weight", connection.weight);
-            data.addProperty("from", connection.from.index);
-            data.addProperty("to", connection.to.index);
-            data.addProperty("gater", connection.gater != null ? connection.gater.index : -1);
-            n1Conns.put(Connection.getInnovationID(connection.from.index, connection.to.index), data);
-        }
-
-        for (int i = 0; i < network1.selfConns.size(); i++) {
-            final Connection connection = network1.selfConns.get(i);
-            final JsonObject data = new JsonObject();
-            data.addProperty("weight", connection.weight);
-            data.addProperty("from", connection.from.index);
-            data.addProperty("to", connection.to.index);
-            data.addProperty("gater", connection.gater != null ? connection.gater.index : -1);
-            n1Conns.put(Connection.getInnovationID(connection.from.index, connection.to.index), data);
-        }
-
-        for (int i = 0; i < network2.connections.size(); i++) {
-            final Connection connection = network2.connections.get(i);
-            final JsonObject data = new JsonObject();
-            data.addProperty("weight", connection.weight);
-            data.addProperty("from", connection.from.index);
-            data.addProperty("to", connection.to.index);
-            data.addProperty("gater", connection.gater != null ? connection.gater.index : -1);
-            n2Conns.put(Connection.getInnovationID(connection.from.index, connection.to.index), data);
-        }
-        for (int i = 0; i < network2.selfConns.size(); i++) {
-            final Connection connection = network2.selfConns.get(i);
-            final JsonObject data = new JsonObject();
-            data.addProperty("weight", connection.weight);
-            data.addProperty("from", connection.from.index);
-            data.addProperty("to", connection.to.index);
-            data.addProperty("gater", connection.gater != null ? connection.gater.index : -1);
-            n2Conns.put(Connection.getInnovationID(connection.from.index, connection.to.index), data);
-        }
+        getConnectionsData(network1, n1Conns);
+        getConnectionsData(network2, n2Conns);
 
         final List<JsonObject> connections = new ArrayList<>();
         final List<Integer> keys1 = new ArrayList<>(n1Conns.keySet());
@@ -303,6 +264,27 @@ public class Network {
             }
         }
         return offspring;
+    }
+
+    private static void getConnectionsData(Network network, Map<Integer, JsonObject> conns) {
+        for (int i = 0; i < network.connections.size(); i++) {
+            final Connection connection = network.connections.get(i);
+            final JsonObject data = new JsonObject();
+            data.addProperty("weight", connection.weight);
+            data.addProperty("from", connection.from.index);
+            data.addProperty("to", connection.to.index);
+            data.addProperty("gater", connection.gater != null ? connection.gater.index : -1);
+            conns.put(Connection.getInnovationID(connection.from.index, connection.to.index), data);
+        }
+        for (int i = 0; i < network.selfConns.size(); i++) {
+            final Connection connection = network.selfConns.get(i);
+            final JsonObject data = new JsonObject();
+            data.addProperty("weight", connection.weight);
+            data.addProperty("from", connection.from.index);
+            data.addProperty("to", connection.to.index);
+            data.addProperty("gater", connection.gater != null ? connection.gater.index : -1);
+            conns.put(Connection.getInnovationID(connection.from.index, connection.to.index), data);
+        }
     }
 
     @Override

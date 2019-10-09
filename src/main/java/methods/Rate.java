@@ -14,7 +14,7 @@ public abstract class Rate {
         }
     }
 
-    public class STEP extends Rate {
+    public static class STEP extends Rate {
 
         private final int stepSize;
         private final double gamma;
@@ -42,7 +42,7 @@ public abstract class Rate {
         }
     }
 
-    public class EXP extends Rate {
+    public static class EXP extends Rate {
 
         private final double gamma;
 
@@ -60,7 +60,7 @@ public abstract class Rate {
         }
     }
 
-    public class INV extends Rate {
+    public static class INV extends Rate {
 
         private final double gamma;
         private final double power;

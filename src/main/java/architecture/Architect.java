@@ -167,10 +167,6 @@ public class Architect {
         return construct(nodes);
     }
 
-    public static Network createLSTM(final int... layers) {
-        return createLSTM(new HashMap<>(), layers);
-    }
-
     public static Network createLSTM(Map<Option, Boolean> options, final int... layers) {
         if (options == null) {
             options = new HashMap<>();

@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 public abstract class Layer extends NodeGroup {
-    private final ConnectionListLayer connections;
+    private final ConnectionListGroup connections;
     NodeGroup output;
     List<NodeGroup> nodes;
 
@@ -16,7 +16,7 @@ public abstract class Layer extends NodeGroup {
         super(0);
         this.output = null;
         this.nodes = new ArrayList<>();
-        this.connections = new ConnectionListLayer();
+        this.connections = new ConnectionListGroup();
     }
 
     @Override
@@ -27,11 +27,6 @@ public abstract class Layer extends NodeGroup {
     @Override
     List<Connection> connect(final NodeGroup target, final ConnectionType method, final double weight) {
         return this.output.connect(target, method, weight);
-    }
-
-    @Override
-    void disconnect(final NodeGroup target) {
-        this.disconnect(target, false);
     }
 
     private void disconnect(final NodeGroup target, final boolean twoSided) {
@@ -114,8 +109,8 @@ public abstract class Layer extends NodeGroup {
     }
 
     @Override
-    List<Connection> connect(final Layer target, final ConnectionType method, final double weight) {
-        return target.input(this, method, weight);
+    void connect(final Layer target, final ConnectionType method, final double weight) {
+        target.input(this, method, weight);
     }
 
     @Override
@@ -133,8 +128,8 @@ public abstract class Layer extends NodeGroup {
         this.nodes.forEach(NodeGroup::clear);
     }
 
-    public List<Connection> input(final Layer layer, final ConnectionType method, final double weight) {
-        return this.input(layer.output, method, weight);
+    public void input(final Layer layer, final ConnectionType method, final double weight) {
+        this.input(layer.output, method, weight);
     }
 
     public abstract List<Connection> input(NodeGroup from, ConnectionType method, double weight);

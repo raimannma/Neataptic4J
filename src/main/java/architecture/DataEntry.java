@@ -3,8 +3,8 @@ package architecture;
 import java.util.Arrays;
 
 public class DataEntry {
-    double[] input;
-    double[] output;
+    final double[] input;
+    final double[] output;
 
     public DataEntry(final double[] input, final double[] output) {
         this.input = input;

@@ -4,7 +4,6 @@ import methods.ConnectionType;
 import methods.GatingType;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -16,10 +15,6 @@ public class NodeGroup {
         this.nodes = new ArrayList<>();
         this.connections = new ConnectionListGroup();
         IntStream.range(0, size).mapToObj(i -> new Node()).forEach(this.nodes::add);
-    }
-
-    void gate(final Connection connection, final GatingType method) {
-        this.gate(Collections.singletonList(connection), method);
     }
 
     void gate(final List<Connection> connections, final GatingType method) {
@@ -96,36 +91,6 @@ public class NodeGroup {
         return connections;
     }
 
-    void disconnect(final NodeGroup target) {
-        this.disconnect(target, false);
-    }
-
-    private void disconnect(final NodeGroup target, final boolean twoSided) {
-        for (int i = 0; i < this.nodes.size(); i++) {
-            for (int j = 0; j < target.nodes.size(); j++) {
-                this.nodes.get(i).disconnect(target.nodes.get(j), twoSided);
-
-                for (int k = this.connections.out.size() - 1; k >= 0; k--) {
-                    final Connection connection = this.connections.out.get(k);
-                    if (connection.from.equals(this.nodes.get(i)) && connection.to.equals(target.nodes.get(j))) {
-                        this.connections.out.remove(k);
-                        break;
-                    }
-                }
-                if (twoSided) {
-                    for (int k = this.connections.in.size() - 1; k >= 0; k--) {
-                        final Connection connection = this.connections.in.get(k);
-
-                        if (connection.from.equals(target.nodes.get(j)) && connection.to.equals(this.nodes.get(i))) {
-                            this.connections.in.remove(k);
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     void disconnect(final Node target) {
         this.disconnect(target, false);
     }
@@ -178,8 +143,8 @@ public class NodeGroup {
         }
     }
 
-    List<Connection> connect(final Layer target, final ConnectionType method, final double weight) {
-        return target.input(this, method, weight);
+    void connect(final Layer target, final ConnectionType method, final double weight) {
+        target.input(this, method, weight);
     }
 
     List<Connection> connect(final Node target, final ConnectionType method, final double weight) {
